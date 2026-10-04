@@ -1,37 +1,46 @@
 # Eudai Informes
 
-Aplicación web para redactar informes profesionales, previsualizarlos en formato A4 y descargarlos mediante la impresión del navegador como PDF.
+Aplicación web para redactar informes profesionales, previsualizarlos en A4 y guardarlos como PDF mediante la impresión del navegador.
 
 **[Abrir la aplicación](https://eudai-informes.netlify.app/#/)**
 
+## Vista previa
+
+| Formulario | Vista previa del documento |
+| --- | --- |
+| ![Formulario de un nuevo informe, sin datos de pacientes](docs/screenshots/formulario.jpg) | ![Portada de un informe generado con datos ficticios](docs/screenshots/vista-previa.jpg) |
+
+La vista previa usa información ficticia. Este repositorio no incluye informes ni datos reales de pacientes.
+
 ## El problema
 
-Preparar informes repetitivos exige capturar datos del paciente y del profesional, mantener un formato claro y recuperar trabajos anteriores. En una herramienta que trata información de salud también importa saber dónde quedan esos datos y qué ocurre si se pierde el almacenamiento del navegador.
+Preparar informes similares de forma repetida exige ordenar datos del paciente y del profesional, mantener una presentación consistente y recuperar trabajos anteriores. También es importante saber dónde se guardan los datos y cómo respaldarlos.
 
 ## La solución
 
-- Formulario con validación de datos, tipo de informe, especialidad y conclusiones.
-- Vista previa paginada para impresión en A4 y guardado como PDF.
-- Historial con búsqueda y borrador automático.
-- Exportación e importación de respaldos JSON.
-- Datos guardados localmente en el navegador. La aplicación no tiene backend ni envía informes a un servidor.
+Una herramienta centrada en el flujo completo del informe: carga de datos, validación, redacción, vista previa paginada, impresión en PDF e historial local.
 
-**Atención:** los informes y borradores se guardan en `localStorage` del navegador. Si se borran los datos del sitio o se cambia de dispositivo, se pierden salvo que se haya exportado un respaldo. Conviene usar esta herramienta sólo en dispositivos y perfiles de navegador adecuados para manejar información sensible. Este repositorio no contiene informes ni datos reales de pacientes.
+## Funcionalidades
 
-## Tecnologías y estructura
+- Formulario con campos del paciente, tipo de informe, especialidad, contenido y profesional responsable.
+- Validación y saneamiento de los datos antes de componer el documento.
+- Vista previa A4 paginada y descarga mediante la impresión del navegador.
+- Borrador automático, historial con búsqueda e importación y exportación de respaldos JSON.
 
-HTML, CSS y JavaScript nativo con módulos ES. No requiere instalación de dependencias ni proceso de compilación.
+## Tecnologías
+
+HTML, CSS y JavaScript nativo con módulos ES. No requiere dependencias ni compilación. El sitio se publica como contenido estático en Netlify.
+
+## Cómo está organizado
 
 | Ruta | Responsabilidad |
 | --- | --- |
-| `index.html` | Vistas, formulario y plantillas de interfaz |
+| `index.html`, `css/app.css` | Formulario e interfaz adaptable |
 | `report-template.html`, `css/report.css` | Documento A4 y estilos de impresión |
-| `css/app.css` | Interfaz adaptable |
-| `js/schema.js`, `js/sanitize.js`, `js/validate.js` | Campos, normalización y validación |
-| `js/store.js` | Historial, borrador y respaldos locales |
-| `js/report.js` | Composición y paginación del informe |
-| `js/app.js`, `js/ui.js`, `js/format.js` | Flujo, interfaz y presentación de datos |
-| `_headers`, `netlify.toml` | Cabeceras y despliegue estático en Netlify |
+| `js/schema.js`, `js/sanitize.js`, `js/validate.js` | Campos, saneamiento y validación |
+| `js/store.js` | Borrador, historial y respaldos locales |
+| `js/report.js`, `js/app.js`, `js/ui.js`, `js/format.js` | Composición del informe y flujo de la interfaz |
+| `_headers`, `netlify.toml` | Cabeceras y configuración del despliegue |
 
 ## Ejecutar en local
 
@@ -41,12 +50,18 @@ Desde la raíz del repositorio:
 python3 -m http.server 8000
 ```
 
-Abrir `http://localhost:8000/`. Los módulos y la plantilla necesitan servirse por HTTP; abrir `index.html` directamente desde el disco no funciona.
+Abrí `http://localhost:8000/`. Los módulos y la plantilla necesitan servirse por HTTP; abrir `index.html` directamente no funciona.
 
-Para publicar en Netlify, conectar este repositorio y usar la configuración incluida en `netlify.toml` (`publish = "."`).
+## Alcance de esta versión
+
+Los informes y borradores se guardan en `localStorage` del navegador. La aplicación no tiene backend ni envía informes a un servidor. Si se borran los datos del sitio o se cambia de dispositivo, los trabajos se pierden salvo que se haya exportado un respaldo. Para manejar información sensible, es necesario usar un dispositivo y perfil de navegador adecuados.
 
 ## Decisiones técnicas
 
-La validación y el saneamiento están separados de la interfaz. Los valores de los informes se insertan en la plantilla como texto, y la paginación contempla contenido largo para evitar cortes en el PDF. Las cabeceras de Netlify incluyen una política de seguridad de contenido; las tipografías y recursos se sirven desde el propio sitio.
+La validación y el saneamiento están separados de la interfaz. Los valores del informe se insertan en la plantilla como texto, y la paginación contempla contenido largo para evitar cortes en el PDF. Las cabeceras de Netlify incluyen una política de seguridad de contenido y los recursos se sirven desde el propio sitio.
 
-El historial de correcciones, las decisiones de implementación y las limitaciones están en las [notas técnicas](docs/NOTAS_TECNICAS.md).
+Las correcciones, decisiones de implementación y limitaciones están en las [notas técnicas](docs/NOTAS_TECNICAS.md).
+
+---
+
+Desarrollado por [Jeremias Hilt Peletti](https://jeremiashiltpeletti.com/).
