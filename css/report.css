@@ -1,0 +1,716 @@
+@charset "UTF-8";
+
+/* ==========================================================================
+   Eudai · Documento del informe (A4)
+   Se carga dentro del iframe de vista previa y es lo que se imprime.
+   Todas las medidas van en mm para que pantalla e impresión coincidan.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Montserrat var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/montserrat-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Montserrat var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/montserrat-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Inter var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --------------------------------------------------------------------------
+   Tokens del documento
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Paleta de marca del impreso */
+  --cream: #f7f6f3;
+  --page-2: #fcfcfc;
+  --terracotta: #e2571c;
+  --icon-stroke: #e85a1e;
+  --icon-bg-strong: #f4ccb0;
+  --icon-bg-soft: #f9efe9;
+  --heading-orange: #f2863c;
+
+  --card-bg: #f8f8f4;
+  --card-border: #ecebe7;
+  --field-rule: #ebcabc;
+
+  --title-ink: #303038;
+  --label-ink: #5e6367;
+
+  --font-display: "Montserrat var", "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter var", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --rule-thin: 0.45mm;
+  --rule-title: 0.8mm;
+
+  /* Geometría de la página */
+  --page-w: 210mm;
+  --page-h: 297mm;
+  --margin-x: 11.3mm;
+
+  /* Rejilla de campos de la ficha del paciente */
+  --field-row: 8.6mm;
+  --field-gap: 6mm;
+}
+
+/* --------------------------------------------------------------------------
+   Reset
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+
+  /* Los fondos de color son parte del documento, no decoración de pantalla */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+img,
+svg {
+  display: block;
+  max-inline-size: 100%;
+}
+
+body {
+  font-family: var(--font-display);
+  background: var(--cream);
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Página
+   -------------------------------------------------------------------------- */
+
+.page {
+  position: relative;
+  inline-size: var(--page-w);
+  block-size: var(--page-h);
+  overflow: hidden;
+  background: var(--cream);
+  break-after: page;
+}
+
+.page:last-of-type {
+  break-after: auto;
+}
+
+.page--data {
+  background: var(--page-2);
+}
+
+/* Capas decorativas ------------------------------------------------------ */
+
+.wave,
+.watermark,
+.leaf {
+  position: absolute;
+  pointer-events: none;
+}
+
+.wave {
+  inset-inline-start: 0;
+  inline-size: var(--page-w);
+  block-size: auto;
+}
+
+.wave--top {
+  inset-block-start: 0;
+  z-index: 1;
+}
+
+.wave--bottom {
+  inset-block-end: 0;
+  z-index: 0;
+  transform: translateY(40%);
+}
+
+.page--data .wave--bottom {
+  z-index: 1;
+}
+
+.watermark--tree {
+  inset-block-start: 17mm;
+  inset-inline-start: 132mm;
+  inline-size: 76mm;
+  block-size: auto;
+}
+
+.watermark--plant {
+  inset-block-end: 50mm;
+  inset-inline-start: -7mm;
+  inline-size: 52mm;
+  block-size: auto;
+}
+
+.leaf--corner {
+  z-index: 1;
+  inset-block-start: 223.4mm;
+  inset-inline-start: 152.8mm;
+  inline-size: 34.4mm;
+  block-size: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Página 1 · portada
+   -------------------------------------------------------------------------- */
+
+.cover__logo {
+  position: absolute;
+  inset-block-start: 46mm;
+  inset-inline: 0;
+  z-index: 2;
+  text-align: center;
+}
+
+.cover__logo img {
+  display: inline-block;
+  inline-size: 131mm;
+  block-size: auto;
+}
+
+.cover__divider {
+  position: absolute;
+  inset-block-start: 104.3mm;
+  inset-inline: 0;
+  z-index: 2;
+  display: flex;
+  gap: 4.5mm;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover__divider span {
+  inline-size: 30.3mm;
+  block-size: var(--rule-thin);
+  background: var(--terracotta);
+}
+
+.cover__divider img {
+  inline-size: 13.5mm;
+  block-size: auto;
+}
+
+.cover__title {
+  position: absolute;
+  inset-block-start: 117.3mm;
+  inset-inline: 0;
+  z-index: 2;
+  font-size: 13.6mm;
+  font-weight: 400;
+  line-height: 1.46;
+  color: var(--title-ink);
+  text-align: center;
+  letter-spacing: 0.3mm;
+}
+
+.cover__title span {
+  display: block;
+}
+
+.cover__rule {
+  position: absolute;
+  inset-block-start: 159mm;
+  inset-inline: 0;
+  z-index: 2;
+  inline-size: 78mm;
+  block-size: var(--rule-title);
+  margin-inline: auto;
+  background: var(--terracotta);
+}
+
+/* Subtítulo con el tipo de informe (el original lo pedía pero no lo imprimía) */
+.cover__kind {
+  position: absolute;
+  inset-block-start: 163.5mm;
+  inset-inline: 0;
+  z-index: 2;
+  font-size: 4.2mm;
+  font-weight: 500;
+  color: var(--label-ink);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1mm;
+}
+
+.cover__kind:empty {
+  display: none;
+}
+
+/* Campos de portada ------------------------------------------------------ */
+
+.cover__fields {
+  position: absolute;
+  inset-block-start: 175.6mm;
+  /* Acotado también por la derecha: sin esto, un nombre largo empuja la fila
+     fuera de la hoja en lugar de quedar contenido. */
+  inset-inline: 63.1mm 11.3mm;
+  z-index: 2;
+  display: grid;
+  /* minmax(0, 1fr) por el mismo motivo que en la ficha: los ítems de grid
+     traen `min-width: auto` y un dato largo empuja la fila fuera de la hoja
+     en lugar de quedar contenida. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 11.2mm;
+}
+
+.cover-field {
+  display: flex;
+  gap: 6.1mm;
+  align-items: center;
+  min-inline-size: 0;
+  min-block-size: 16.8mm;
+}
+
+.cover-field__icon {
+  flex: none;
+  inline-size: 16.8mm;
+  block-size: 16.8mm;
+}
+
+.cover-field__icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.cover-field__text {
+  display: flex;
+  flex: 1;
+  gap: 2.4mm;
+  align-items: baseline;
+  min-inline-size: 0;
+}
+
+.cover-field__label {
+  font-size: 5.1mm;
+  font-weight: 600;
+  color: var(--label-ink);
+  white-space: nowrap;
+}
+
+/* 62,8 mm es el largo de subrayado del diseño original y se respeta siempre
+   que el dato entre. Si no entra, la línea se estira hasta el margen antes de
+   recurrir a achicar la letra: es el ajuste que menos se nota. */
+.cover-field__line {
+  inline-size: fit-content;
+  min-inline-size: 62.8mm;
+  max-inline-size: 100%;
+  overflow: hidden;
+  line-height: 1.18;
+  white-space: nowrap;
+  border-block-end: var(--rule-thin) solid var(--terracotta);
+}
+
+.cover-field__value {
+  display: inline-block;
+  padding: 0 0.5mm 0.8mm;
+
+  /* El JS baja --fit hasta 0.6 si el texto no entra, en vez de recortarlo */
+  font-size: calc(4.6mm * var(--fit, 1));
+  font-weight: 400;
+  color: var(--title-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Páginas 2+ · encabezado común
+   -------------------------------------------------------------------------- */
+
+.sheet__logo {
+  position: absolute;
+  inset-block-start: 8.6mm;
+  inset-inline-start: 3.4mm;
+  z-index: 3;
+  inline-size: 64mm;
+  block-size: auto;
+}
+
+.sheet__meta {
+  position: absolute;
+  inset-block-start: 16.45mm;
+  inset-inline-end: 10.5mm;
+  z-index: 3;
+  display: flex;
+  gap: 4.5mm;
+  align-items: center;
+  block-size: 12.5mm;
+}
+
+.sheet__meta-title {
+  margin-inline-end: 0.5mm;
+  font-size: 4mm;
+  font-weight: 400;
+  color: var(--title-ink);
+  white-space: nowrap;
+  letter-spacing: 0.35mm;
+}
+
+.sheet__meta-sep {
+  inline-size: 0.8mm;
+  block-size: 12.5mm;
+  background: var(--heading-orange);
+  border-radius: 0.4mm;
+}
+
+.sheet__badge {
+  display: grid;
+  place-items: center;
+  inline-size: 12.5mm;
+  block-size: 12.5mm;
+  font-size: 6mm;
+  font-weight: 600;
+  color: #fff;
+  background: var(--heading-orange);
+  border-radius: 50%;
+}
+
+/* Título de sección ------------------------------------------------------ */
+
+.sheet__section {
+  position: absolute;
+  inset-block-start: 75.6mm;
+  inset-inline-start: var(--margin-x);
+  z-index: 3;
+  display: flex;
+  gap: 6.7mm;
+  align-items: flex-start;
+}
+
+.sheet__section-icon {
+  flex: none;
+  inline-size: 13mm;
+  block-size: 13mm;
+}
+
+.sheet__section-icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.sheet__section-heading {
+  padding-block-start: 3.3mm;
+}
+
+.sheet__section-title {
+  font-size: 5.6mm;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--title-ink);
+  letter-spacing: 0.2mm;
+}
+
+.sheet__section-title::after {
+  content: "";
+  display: block;
+  inline-size: 13mm;
+  block-size: 0.8mm;
+  margin-block-start: 2.3mm;
+  background: var(--icon-stroke);
+}
+
+/* --------------------------------------------------------------------------
+   Página 2 · fichas
+   -------------------------------------------------------------------------- */
+
+.sheet__cards {
+  position: absolute;
+  inset-block-start: 95.1mm;
+  inset-inline-start: var(--margin-x);
+  z-index: 2;
+  display: flex;
+  gap: 6.7mm;
+  align-items: flex-start;
+  inline-size: 186.4mm;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 0.2mm solid var(--card-border);
+  border-radius: 3mm;
+}
+
+/* Las fichas fluyen (grid), no van posicionadas a mano: así entran los
+   campos opcionales sin recalcular coordenadas una por una. */
+.card--patient {
+  flex: none;
+  inline-size: 113.9mm;
+  min-block-size: 133.8mm;
+  padding: 8.4mm 5.2mm;
+}
+
+.card--professional {
+  flex: none;
+  inline-size: 65.8mm;
+  min-block-size: 95.4mm;
+  padding: 8.5mm 6mm;
+}
+
+.field-list {
+  display: grid;
+  /* minmax(0, 1fr): sin esto las filas se dimensionan por su contenido y un
+     dato largo se derrama fuera de la tarjeta y de la hoja, en vez de
+     recortarse dentro. Es el `min-width: auto` que traen los ítems de grid. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--field-gap);
+  list-style: none;
+}
+
+.data-field {
+  display: flex;
+  gap: 6.9mm;
+  align-items: stretch;
+  min-inline-size: 0;
+  min-block-size: var(--field-row);
+}
+
+.data-field__icon {
+  flex: none;
+  inline-size: var(--field-row);
+  block-size: var(--field-row);
+}
+
+.data-field__icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.data-field__body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-inline-size: 0;
+}
+
+.data-field__label {
+  margin-block-end: 1.1mm;
+  font-size: 2.2mm;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--label-ink);
+  white-space: nowrap;
+}
+
+.data-field__value {
+  padding-inline-start: 0.5mm;
+  padding-block-end: 0.7mm;
+  overflow: hidden;
+  font-size: calc(2.5mm * var(--fit, 1));
+  line-height: 1.15;
+  color: var(--title-ink);
+  white-space: nowrap;
+  border-block-end: 0.35mm solid var(--field-rule);
+}
+
+/* Último recurso cuando un dato no entra ni achicado: se reparte en dos
+   líneas. Un apellido un punto más chico se lee; uno cortado al medio, no.
+   El tope de dos líneas evita que una tarjeta crezca sin control. */
+.cover-field__line.is-wrapped,
+.data-field__value.is-wrapped {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* El tope se calcula con el cuerpo real del dato, no con la unidad `lh`: en la
+   portada `lh` se resuelve contra la tipografía heredada por la línea, que no
+   es la del valor, y el tope quedaba corto justo donde tiene que servir. */
+.cover-field__line.is-wrapped {
+  /* Con `box-sizing: border-box`, el tope tiene que contemplar también el
+     relleno inferior del valor y el grosor del subrayado; si no, la segunda
+     línea entra en el cálculo pero se recorta en pantalla. */
+  max-block-size: calc(4.6mm * 1.18 * 2 * var(--fit, 1) + 0.8mm + var(--rule-thin));
+}
+
+.data-field__value.is-wrapped {
+  max-block-size: calc(2.5mm * 1.15 * 2 * var(--fit, 1) + 0.7mm + 0.35mm);
+}
+
+/* Ficha del profesional: sin íconos por campo, con su propio encabezado */
+.card--professional .field-list {
+  gap: 7.5mm;
+  margin-block-start: 8.4mm;
+}
+
+.card__heading {
+  display: flex;
+  gap: 3.5mm;
+  align-items: flex-start;
+}
+
+.card__heading-icon {
+  flex: none;
+  inline-size: 12mm;
+  block-size: 12mm;
+}
+
+.card__heading-icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.card__heading-title {
+  padding-block-start: 1.9mm;
+  font-size: 5.4mm;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--title-ink);
+  letter-spacing: 0.2mm;
+}
+
+.card__heading-title::after {
+  content: "";
+  display: block;
+  inline-size: 15mm;
+  block-size: 0.8mm;
+  margin-block-start: 2.5mm;
+  background: var(--icon-stroke);
+}
+
+.card--professional .data-field {
+  display: block;
+  block-size: auto;
+}
+
+.card--professional .data-field__label {
+  margin-block-end: 2mm;
+}
+
+/* --------------------------------------------------------------------------
+   Páginas de contenido · conclusiones
+   -------------------------------------------------------------------------- */
+
+.sheet__content {
+  position: absolute;
+  inset-block-start: 95.1mm;
+  inset-inline-start: var(--margin-x);
+  z-index: 2;
+  inline-size: 186.4mm;
+  block-size: 160mm;
+  padding: 10mm;
+  background: var(--card-bg);
+  border: 0.2mm solid var(--card-border);
+  border-radius: 3mm;
+}
+
+/* La hoja decorativa va dentro de la tarjeta y por detrás del cuerpo: en el
+   original se dibujaba encima y tapaba el texto de las hojas más cargadas. */
+.leaf--watermark {
+  inset-block-end: 6mm;
+  inset-inline-end: 7mm;
+  z-index: 0;
+  inline-size: 34.4mm;
+  block-size: auto;
+  opacity: 0.38;
+}
+
+/* Caja de medida: el paginador corta el texto justo donde deja de entrar. */
+.content-body {
+  position: relative;
+  z-index: 1;
+  block-size: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 3.5mm;
+  line-height: 1.6;
+  color: var(--title-ink);
+  text-align: justify;
+  hyphens: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* --------------------------------------------------------------------------
+   Sólo en pantalla: las páginas se apilan como hojas sueltas
+   -------------------------------------------------------------------------- */
+
+@media screen {
+  /* El marco se dimensiona al alto exacto del documento, así que no hay nada
+     que desplazar; esto evita la barra por redondeo de subpíxeles y ahorra el
+     atributo obsoleto scrolling="no" en el iframe. */
+  html {
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    gap: 6mm;
+    align-items: center;
+    padding-block: 6mm;
+    background: transparent;
+  }
+
+  .page {
+    flex: none;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 10%),
+      0 4px 6px -2px rgb(0 0 0 / 5%);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sprite de íconos y color heredado
+   (sin atributos style inline: la CSP no permite estilos en línea)
+   -------------------------------------------------------------------------- */
+
+.sprite {
+  position: absolute;
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+}
+
+.cover-field__icon svg,
+.data-field__icon svg,
+.card__heading-icon svg {
+  color: var(--icon-stroke);
+}
+

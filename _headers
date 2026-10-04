@@ -1,0 +1,54 @@
+# Cabeceras de Netlify.
+#
+# Se leen desde el directorio publicado, así que valen tanto si el sitio se
+# despliega desde Git como si se arrastra la carpeta al panel.
+#
+# Los comentarios van siempre sin sangría, fuera de los bloques: una línea
+# indentada se interpreta como "Cabecera: valor", y un comentario ahí adentro
+# puede tumbar el archivo entero y dejar el sitio sin ninguna cabecera.
+
+# --- Content Security Policy --------------------------------------------
+# Todo se sirve desde el propio origen: no hay CDN, ni Google Fonts, ni
+# analítica. Sin 'unsafe-inline' ni 'unsafe-eval', y por eso no queda un solo
+# atributo style ni un handler onclick en el HTML.
+#   default-src 'none'  -> lo que no está declarado, está prohibido
+#   frame-src 'self'    -> el iframe srcdoc del informe, que hereda esta CSP
+#   form-action 'self'  -> ningún formulario puede enviarse fuera del sitio
+#   img-src data:       -> la flecha de los <select>, embebida como data URI
+#
+# --- Resto de las cabeceras ---------------------------------------------
+# X-Frame-Options / frame-ancestors: nadie puede embeber la app en un iframe,
+# que sobre datos de salud sería clickjacking.
+# Cross-Origin-Resource-Policy: ningún otro sitio puede enlazar estos recursos.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'self'; child-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Sin hash en los nombres de archivo, el HTML y el código se revalidan siempre.
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/report-template.html
+  Cache-Control: no-cache
+
+/css/*
+  Cache-Control: no-cache
+
+/js/*
+  Cache-Control: no-cache
+
+# Las tipografías nunca cambian de contenido: se pueden cachear un año.
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=86400

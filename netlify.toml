@@ -1,0 +1,5 @@
+# Sitio estático: no hay build ni dependencias. El código se publica tal cual.
+# También funciona al conectar este repositorio a Netlify.
+# Las cabeceras viven en `_headers`, dentro del directorio publicado.
+[build]
+  publish = "."
