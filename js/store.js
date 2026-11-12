@@ -104,14 +104,13 @@ export function loadDraft() {
 
   /** @type {Record<string, string>} */
   const draft = {};
-  let filled = 0;
   for (const name of FIELD_NAMES) {
     // Lo guardado es tan poco confiable como lo que se tipea: se sanea igual.
     draft[name] = sanitizeField(name, parsed.data[name]);
-    if (draft[name]) filled += 1;
   }
-  // Un borrador con sólo la fecha y los desplegables por defecto no cuenta.
-  return filled > 3 ? draft : null;
+  // Si lo guardado difiere de un formulario recién abierto lo decide quien
+  // conoce los valores por defecto (la fecha de hoy, el primer desplegable).
+  return draft;
 }
 
 /** Descarta el borrador en curso. */

@@ -392,8 +392,21 @@ summary:focus-visible,
   display: none;
 }
 
+/* Al recargar en el formulario, los campos se completan con el borrador
+   cuando corre `app.js`, un instante después del primer pintado. Para no ver
+   las fechas vacías («dd/mm/aaaa») y luego llenarse, el formulario espera
+   invisible ese instante; ocupa su lugar, así que nada se mueve al aparecer.
+   Si el script fallara, la animación lo muestra igual al segundo. */
 [data-boot="form"] #view-form {
   display: block;
+  visibility: hidden;
+  animation: boot-reveal 0s 1s forwards;
+}
+
+@keyframes boot-reveal {
+  to {
+    visibility: visible;
+  }
 }
 
 /* La transición es sólo de opacidad y sólo al navegar (el router marca la

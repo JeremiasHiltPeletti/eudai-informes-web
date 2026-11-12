@@ -127,12 +127,29 @@ function goTo(hash) {
 /* -- Formulario ------------------------------------------------------------ */
 
 /** Deja el formulario listo: fecha de hoy y borrador recuperado, si existe. */
+/**
+ * Si un borrador tiene algo que el usuario haya cargado o cambiado. Cualquier
+ * campo cuenta, también una fecha sola: antes se exigían varios campos y un
+ * borrador con sólo la fecha se perdía al recargar.
+ * @param {Record<string, string>} draft
+ */
+function differsFromBlank(draft) {
+  return FIELD_NAMES.some((name) => {
+    const control = form.elements[name];
+    if (!draft[name] || !control) return false;
+    if (name === 'fecha') return draft[name] !== todayISO();
+    // Un desplegable vale por defecto su primera opción.
+    if (control.tagName === 'SELECT') return draft[name] !== control.options[0]?.value;
+    return true;
+  });
+}
+
 function prepareForm() {
   if (form.dataset.ready === 'true') return;
   form.dataset.ready = 'true';
 
   const draft = store.loadDraft();
-  if (draft) {
+  if (draft && differsFromBlank(draft)) {
     for (const name of FIELD_NAMES) {
       if (form.elements[name] && draft[name]) form.elements[name].value = draft[name];
     }
@@ -425,6 +442,16 @@ form.addEventListener(
 form.addEventListener('change', (event) => {
   if (event.target.name === 'especialidad') formatOnBlur('matricula');
   if (event.target.name === 'fecha_nacimiento') syncAge();
+  // Un selector de fecha o un desplegable se eligen de una vez: se guarda ya.
+  saveDraftSoon();
+  saveDraftSoon.flush();
+});
+
+// Lo último que se escribió no espera al autoguardado si la página se recarga,
+// se cierra o pasa a segundo plano (en el celular, cambiar de app).
+globalThis.addEventListener('pagehide', () => saveDraftSoon.flush());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveDraftSoon.flush();
 });
 
 document.querySelector('[data-clear]').addEventListener('click', async () => {

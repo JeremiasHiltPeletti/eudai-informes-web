@@ -104,11 +104,24 @@ export function debounce(fn, wait) {
 
   const run = (...args) => {
     globalThis.clearTimeout(timer);
-    timer = globalThis.setTimeout(() => fn(...args), wait);
+    timer = globalThis.setTimeout(() => {
+      timer = undefined;
+      fn(...args);
+    }, wait);
   };
 
   /** Cancela una ejecución pendiente (p. ej. al vaciar el formulario). */
-  run.cancel = () => globalThis.clearTimeout(timer);
+  run.cancel = () => {
+    globalThis.clearTimeout(timer);
+    timer = undefined;
+  };
+
+  /** Ejecuta ya la llamada pendiente, si la hay (p. ej. antes de recargar). */
+  run.flush = (...args) => {
+    if (timer === undefined) return;
+    run.cancel();
+    fn(...args);
+  };
 
   return run;
 }

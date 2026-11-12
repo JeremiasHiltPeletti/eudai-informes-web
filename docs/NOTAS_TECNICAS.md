@@ -306,6 +306,22 @@ hueco entre ella y el notch. Su lugar lo repone un `padding` en `<body>`
 (`--header-offset`, que suma `env(safe-area-inset-top)`), y
 `scroll-padding-block-start` evita que tape lo que se enfoca.
 
+## Recargar sin perder lo cargado
+
+Al recargar en el formulario se veían un instante los campos vacíos —las fechas
+con «dd/mm/aaaa»— y después se llenaban, y a veces lo último no volvía:
+
+- el borrador se completa cuando corre `app.js`, después del primer pintado.
+  Ahora el formulario espera invisible ese instante (ocupa su lugar, así que
+  nada se corre); si el script fallara, una animación lo muestra al segundo;
+- el autoguardado espera 600 ms y una recarga dentro de ese margen perdía lo
+  último. Ahora los selectores de fecha y los desplegables se guardan al
+  elegirlos, y lo pendiente se guarda al salir de la página (`pagehide`) o al
+  pasar a segundo plano;
+- un borrador se restauraba sólo con varios campos cargados, así que una fecha
+  sola se perdía. Ahora basta con cualquier campo distinto de un formulario
+  recién abierto (la fecha de hoy y la primera opción de cada desplegable).
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en
