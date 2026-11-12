@@ -39,7 +39,7 @@ HTML, CSS y JavaScript nativo con módulos ES. No requiere dependencias ni compi
 | `report-template.html`, `css/report.css` | Documento A4 y estilos de impresión |
 | `js/schema.js`, `js/sanitize.js`, `js/validate.js` | Campos, saneamiento y validación |
 | `js/store.js` | Borrador del informe en curso |
-| `js/boot.js`, `js/restore.js`, `js/report.js`, `js/app.js`, `js/ui.js`, `js/format.js` | Composición del informe y flujo de la interfaz |
+| `js/boot.js`, `js/restore.js`, `js/report.js`, `js/app.js`, `js/ui.js`, `js/keyboard.js`, `js/format.js` | Composición del informe y flujo de la interfaz |
 | `_headers`, `netlify.toml` | Cabeceras y configuración del despliegue |
 
 ## Ejecutar en local

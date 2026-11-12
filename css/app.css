@@ -188,7 +188,10 @@ html {
   /* Lo que se enfoca o se busca por ancla no queda tapado por la cabecera. */
   scroll-padding-block-start: calc(var(--header-offset) + var(--space-3));
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+
+  /* Sin rebote elástico ni «arrastrar para recargar»: al soltar, el rebote
+     devolvía la página hacia arriba y en el celular se veía todo moverse. */
+  overscroll-behavior-y: none;
 
   /* El color va también en la raíz: el área que asoma al sobre-scrollear, o
      cuando el navegador móvil esconde su barra, la pinta el lienzo, y sin un
@@ -371,7 +374,8 @@ summary:focus-visible,
 }
 
 .main {
-  padding-block: var(--space-6) var(--space-7);
+  /* `--keyboard-inset`: con el teclado abierto, lo que tapa (js/keyboard.js). */
+  padding-block: var(--space-6) calc(var(--space-7) + var(--keyboard-inset, 0px));
 }
 
 /* --------------------------------------------------------------------------

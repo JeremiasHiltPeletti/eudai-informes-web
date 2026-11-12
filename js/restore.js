@@ -11,6 +11,11 @@
   const root = document.documentElement;
   if (root.dataset.boot !== 'form') return;
 
+  // La altura se repone sólo en una recarga. Al entrar al sitio (un enlace, la
+  // pestaña reabierta) se empieza arriba, con la cabecera a la vista.
+  const [navigation] = globalThis.performance?.getEntriesByType?.('navigation') ?? [];
+  const isReload = navigation?.type === 'reload';
+
   try {
     const form = document.getElementById('report-form');
     const saved = JSON.parse(globalThis.localStorage.getItem('eudai.borrador.v1') ?? 'null');
@@ -29,7 +34,7 @@
 
   try {
     const scroll = JSON.parse(globalThis.sessionStorage.getItem('eudai.scroll') ?? 'null');
-    if (scroll && scroll.hash === '#/nuevo' && Number.isFinite(scroll.y)) {
+    if (isReload && scroll && scroll.hash === '#/nuevo' && Number.isFinite(scroll.y)) {
       // `instant`: el CSS pide desplazamiento suave, y acá se vería la página
       // deslizarse desde arriba.
       globalThis.scrollTo({ top: Math.max(0, scroll.y), behavior: 'instant' });

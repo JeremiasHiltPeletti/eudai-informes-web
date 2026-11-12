@@ -361,6 +361,27 @@ El aviso del borrador ya no aparece en una recarga (`performance` informa el
 tipo de navegación): lo cargado vuelve a estar donde estaba y no hace falta
 avisarlo.
 
+## Entrada, rebote y teclado en el celular
+
+- **Al entrar se veía la página scrolleada y sin cabecera.** La altura guardada
+  se reponía en cualquier carga, también al volver a entrar en la misma
+  pestaña. Ahora se repone sólo en una recarga (tipo de navegación `reload`);
+  al entrar por un enlace, desde el historial o con la pestaña reabierta se
+  empieza arriba.
+- **Rebote y «tirar para recargar».** Volvió `overscroll-behavior-y: none` en
+  `<html>`: el rebote al llegar arriba devolvía la página hacia arriba (se veía
+  todo moverse) y el gesto recargaba sin querer. También se quitó
+  `scroll-behavior: smooth`, para que ningún desplazamiento hecho por código se
+  vea deslizar.
+- **El teclado tapaba lo que se escribía.** iOS no acompaña al cursor cuando el
+  área de texto crece mientras se escribe, y a veces deja el campo justo debajo
+  del teclado. `js/keyboard.js` mide el área visible (`visualViewport`) y, si el
+  campo —o, en un área de texto más alta que lo visible, la línea del cursor,
+  medida con una copia invisible— queda tapado, corre la página lo justo.
+  Con el teclado abierto agrega al final de la página un espacio del alto del
+  teclado (`--keyboard-inset`), para que hasta el último campo pueda subir.
+  Sin teclado en pantalla no hace nada.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

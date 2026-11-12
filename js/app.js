@@ -11,6 +11,7 @@ import { validateReport, validateField } from './validate.js';
 import * as store from './store.js';
 import { renderReport, mountForPrint } from './report.js';
 import { notify, confirmAction, onNextFrame, debounce } from './ui.js';
+import { keepTypingVisible } from './keyboard.js';
 import {
   todayISO,
   formatDni,
@@ -147,6 +148,8 @@ function takeSavedScroll(hash) {
   try {
     const saved = JSON.parse(globalThis.sessionStorage.getItem(SCROLL_KEY) ?? 'null');
     globalThis.sessionStorage.removeItem(SCROLL_KEY);
+    // Sólo en una recarga: al entrar al sitio se empieza siempre arriba.
+    if (!isReload()) return 0;
     return saved?.hash === hash && Number.isFinite(saved.y) ? Math.max(0, saved.y) : 0;
   } catch {
     return 0;
@@ -567,6 +570,8 @@ if (!store.isPersistent()) {
       'Este navegador tiene el almacenamiento bloqueado: no se puede guardar el borrador mientras escribís. Descargá el PDF antes de cerrar la pestaña, porque es la única copia del informe.';
   }
 }
+
+keepTypingVisible(form, document.querySelector('.site-header'));
 
 // Sin hash, se corrige la dirección sin disparar `hashchange`: con
 // `location.replace` la vista inicial se dibujaba dos veces, la segunda con
