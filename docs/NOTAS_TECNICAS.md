@@ -425,6 +425,28 @@ alcanza para que Chrome en iOS reacomode su barra a destiempo. Ahora una
 dirección sin hash se deja como está (es el inicio); sólo se corrige una ruta
 inexistente o la vista previa sin informe.
 
+## La vista va en el historial, no en la dirección
+
+Al entrar por primera vez —también en incógnito— se abría el formulario en vez
+del inicio: Chrome autocompletaba la dirección con la última visitada,
+`…/#/nuevo`, y la app mostraba esa ruta. Ahora la vista actual no va en la
+dirección sino en el estado del historial de la pestaña (`history.state.view`):
+
+- entrar al sitio (escribiendo la dirección, desde un enlace, en una pestaña
+  nueva o en incógnito) abre siempre el inicio: no hay estado;
+- recargar conserva el estado: se vuelve a la misma vista. Recargar en la vista
+  previa vuelve al formulario, porque el informe no se guarda y el borrador sí;
+- navegar crea entradas con `pushState` sin cambiar la dirección, así que Atrás
+  y Adelante pasan de una vista a otra (`popstate`);
+- los enlaces internos conservan su `href="#/…"`, pero un manejador de clics
+  los resuelve por el historial; un `#/nuevo` viejo en la dirección se ignora
+  y desaparece en la primera navegación. No hay manejador de `hashchange`: al
+  volver a una entrada vieja con `#/nuevo` ese evento también se dispara, y
+  reabría el formulario.
+
+`boot.js` lee el mismo estado para mostrar el formulario desde el primer
+pintado en una recarga.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

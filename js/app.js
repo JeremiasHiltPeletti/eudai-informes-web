@@ -60,42 +60,50 @@ const touchedFields = new Set();
 
 /* -- Enrutado -------------------------------------------------------------- */
 
+/* La vista actual no va en la dirección (antes era `#/nuevo`, etc.) sino en
+   el estado del historial de la pestaña (`history.state.view`):
+   - una recarga conserva ese estado: se vuelve a la misma vista;
+   - una pestaña nueva, o entrar escribiendo la dirección, no lo tiene: se
+     abre siempre el inicio. Con la ruta en la dirección, Chrome autocompletaba
+     `…/#/nuevo` y se entraba directo al formulario;
+   - Atrás y Adelante siguen pasando de una vista a otra (`popstate`);
+   - la dirección no cambia nunca durante la carga: hacerlo dejaba la cabecera
+     tapada por la barra de Chrome en iOS. */
 const ROUTES = Object.freeze({
-  '#/': 'view-home',
-  '#/nuevo': 'view-form',
-  '#/vista-previa': 'view-preview',
+  home: 'view-home',
+  form: 'view-form',
+  preview: 'view-preview',
 });
 
-const DEFAULT_ROUTE = '#/';
+/** Rutas viejas en la dirección (marcadores, autocompletado del navegador). */
+const LEGACY_HASHES = Object.freeze({ '#/': 'home', '#/nuevo': 'form', '#/vista-previa': 'preview' });
+
+/** Vista guardada en el historial de esta pestaña, o el inicio. */
+function currentView() {
+  const view = globalThis.history.state?.view;
+  return Object.keys(ROUTES).includes(view) ? view : 'home';
+}
 
 /** Si ya se mostró alguna vista (la primera no lleva transición). */
 let hasRouted = false;
 
-/** Muestra la vista que corresponde al hash actual. */
+/** Muestra la vista guardada en el historial. */
 function renderRoute() {
-  const hash = ROUTES[globalThis.location.hash] ? globalThis.location.hash : DEFAULT_ROUTE;
+  let view = currentView();
 
-  // Una ruta que no existe —un marcador viejo a `#/historial`, por ejemplo—
-  // muestra el inicio; la barra de direcciones se corrige para que no quede
-  // mostrando algo que ya no está.
-  if (globalThis.location.hash && globalThis.location.hash !== hash) {
-    globalThis.location.replace(hash);
-    return;
-  }
-
-  // La vista previa depende de un informe en memoria: si se llega por un
-  // enlace directo o tras recargar, no hay nada que mostrar.
-  if (hash === '#/vista-previa' && !currentReport) {
-    globalThis.location.replace(DEFAULT_ROUTE);
-    return;
+  // La vista previa depende de un informe en memoria: tras recargar no hay
+  // nada que mostrar, y se vuelve al formulario (con el borrador).
+  if (view === 'preview' && !currentReport) {
+    view = 'form';
+    globalThis.history.replaceState({ view }, '');
   }
 
   // La transición es sólo para cuando se navega: en la carga inicial la vista
   // aparece ya en su lugar, sin ningún movimiento.
-  for (const [route, id] of Object.entries(ROUTES)) {
-    const view = document.getElementById(id);
-    view.hidden = route !== hash;
-    view.classList.toggle('is-entering', hasRouted && route === hash);
+  for (const [name, id] of Object.entries(ROUTES)) {
+    const section = document.getElementById(id);
+    section.hidden = name !== view;
+    section.classList.toggle('is-entering', hasRouted && name === view);
   }
   const isFirstRender = !hasRouted;
   hasRouted = true;
@@ -104,7 +112,7 @@ function renderRoute() {
   // el router.
   delete document.documentElement.dataset.boot;
 
-  if (hash === '#/nuevo') {
+  if (view === 'form') {
     prepareForm();
     refreshDateLimits();
   }
@@ -118,18 +126,39 @@ function renderRoute() {
   // Sin recarga de página el lector de pantalla no anuncia nada por su cuenta:
   // se mueve el foco al título de la vista para que lea dónde quedó. En la
   // carga inicial no hace falta: el lector ya lee la página desde el principio.
-  const heading = document.getElementById(ROUTES[hash]).querySelector('h1');
+  const heading = document.getElementById(ROUTES[view]).querySelector('h1');
   if (heading && !isFirstRender) {
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });
   }
 }
 
-/** @param {string} hash */
-function goTo(hash) {
-  if (globalThis.location.hash === hash) renderRoute();
-  else globalThis.location.hash = hash;
+/**
+ * Pasa a otra vista con una entrada nueva en el historial (Atrás vuelve).
+ * La dirección queda limpia: se le quita cualquier `#/…` viejo.
+ * @param {keyof typeof ROUTES} view
+ */
+function goTo(view) {
+  const url = globalThis.location.pathname + globalThis.location.search;
+  if (currentView() === view && !globalThis.location.hash) {
+    renderRoute();
+    return;
+  }
+  globalThis.history.pushState({ view }, '', url);
+  renderRoute();
 }
+
+// Los enlaces internos conservan su `href="#/…"` (se pueden abrir y leer como
+// enlaces), pero navegan por el historial en vez de cambiar la dirección.
+document.addEventListener('click', (event) => {
+  if (event.defaultPrevented || event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const link = event.target instanceof globalThis.Element ? event.target.closest('a[href^="#/"]') : null;
+  const view = link && LEGACY_HASHES[link.getAttribute('href')];
+  if (!view) return;
+  event.preventDefault();
+  goTo(view);
+});
 
 /* -- Formulario ------------------------------------------------------------ */
 
@@ -349,14 +378,14 @@ async function submitForm() {
     // Primero se muestra la vista y recién después se renderiza: el documento
     // se pagina midiendo alturas reales, y eso exige que el iframe esté
     // efectivamente maquetado, no oculto con `display: none`.
-    goTo('#/vista-previa');
+    goTo('preview');
     await showPreview(data);
   } catch (error) {
     notify(
       error instanceof Error ? error.message : 'No se pudo generar el informe.',
       'error',
     );
-    goTo('#/nuevo');
+    goTo('form');
   } finally {
     setBusy(false);
   }
@@ -523,21 +552,29 @@ async function canLeavePreview() {
 }
 
 document.querySelector('[data-preview-back]').addEventListener('click', async () => {
-  if (await canLeavePreview()) goTo('#/nuevo');
+  if (await canLeavePreview()) goTo('form');
 });
 
 // El logo es la otra salida de la vista previa, así que pasa por el mismo aviso.
-document.querySelector('.brand').addEventListener('click', async (event) => {
-  if (document.getElementById('view-preview').hidden) return;
-  event.preventDefault();
-  if (await canLeavePreview()) goTo('#/');
-});
+// (Escucha en captura: corre antes que el manejador general de enlaces.)
+document.querySelector('.brand').addEventListener(
+  'click',
+  async (event) => {
+    if (document.getElementById('view-preview').hidden) return;
+    event.preventDefault();
+    if (await canLeavePreview()) goTo('home');
+  },
+  true,
+);
 
 printButton.addEventListener('click', () => {
   if (currentReport) print();
 });
 
-globalThis.addEventListener('hashchange', renderRoute);
+// Atrás y Adelante. (Sin un manejador de `hashchange`: al volver a una entrada
+// vieja con `#/nuevo` en la dirección, ese evento también se dispara y
+// reabría el formulario en lugar de respetar el historial.)
+globalThis.addEventListener('popstate', renderRoute);
 
 // El contenedor cambia de ancho por más motivos que un resize de ventana
 // (rotación, aparición de la barra de scroll, zoom del navegador).
@@ -559,14 +596,7 @@ if (!store.isPersistent()) {
 
 keepTypingVisible(form, document.querySelector('.site-header'));
 
-// Sin hash (se entró escribiendo la dirección) la dirección se deja como está:
-// es el inicio. Cambiarla mientras la página carga —aunque sea con
-// `replaceState`— hacía que Chrome para iOS reacomodara su barra a destiempo y
-// la cabecera quedara tapada debajo de ella hasta recargar. Sólo se corrige
-// una ruta que no existe, o la vista previa sin informe en memoria, y sin
-// disparar `hashchange` (la vista inicial no se dibuja dos veces).
-const initialHash = globalThis.location.hash;
-if (initialHash && (!ROUTES[initialHash] || initialHash === '#/vista-previa')) {
-  globalThis.history.replaceState(null, '', DEFAULT_ROUTE);
-}
+// La dirección no se toca durante la carga (ver arriba, en «Enrutado»): un
+// `#/nuevo` viejo que haya traído el autocompletado se ignora y se abre el
+// inicio; se limpia recién cuando se navega.
 renderRoute();
