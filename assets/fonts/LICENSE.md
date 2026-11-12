@@ -5,8 +5,8 @@ permite el uso, la modificación y la redistribución, también auto-hospedadas.
 
 | Familia | Autoría | Origen |
 | --- | --- | --- |
-| Inter (variable, subconjuntos latin y latin-ext) | Rasmus Andersson | https://github.com/rsms/inter |
-| Montserrat (variable, subconjuntos latin y latin-ext) | Julieta Ulanovsky y colaboradores | https://github.com/JulietaUla/Montserrat |
+| Inter (variable para la interfaz; instancia fija 400 para el informe; subconjuntos latin y latin-ext) | Rasmus Andersson | https://github.com/rsms/inter |
+| Montserrat (instancias fijas 400, 500, 600 y 700 para el informe, generadas con fontTools desde la variable; subconjuntos latin y latin-ext) | Julieta Ulanovsky y colaboradores | https://github.com/JulietaUla/Montserrat |
 
 Texto completo de la licencia: https://openfontlicense.org
 

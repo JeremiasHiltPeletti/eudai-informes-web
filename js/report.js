@@ -198,8 +198,11 @@ function fillSlots(doc, data) {
  * muestra que cubre los subconjuntos que usa el español.
  */
 const FONT_PROBES = Object.freeze([
-  '400 13px "Inter var"',
-  '600 21px "Montserrat var"',
+  '400 13px "Inter"',
+  '400 13px "Montserrat"',
+  '500 13px "Montserrat"',
+  '600 21px "Montserrat"',
+  '700 21px "Montserrat"',
 ]);
 
 const FONT_SAMPLE = 'AaEeIiOoUu áéíóúñÁÉÍÓÚÑ 0123456789';

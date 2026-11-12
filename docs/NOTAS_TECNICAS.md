@@ -513,6 +513,22 @@ sueltos. Se descargan recién al generar el primer informe, no al abrir la app.
 Si hubiera que cambiar la decoración, los fondos se regeneran a partir de las
 capas originales, que quedaron en el historial de Git.
 
+### La causa de fondo: fuentes «Type 3»
+
+Con los fondos aplanados la demora siguió, en Windows y algo en macOS, y
+siempre al pasar de página. Un análisis del PDF mostró la causa: Chrome volcaba
+todo el texto como fuentes **Type 3**, en las que cada letra es un dibujo
+vectorial (hasta 2.400 operaciones de texto en una hoja de contenido), en vez
+de incrustar la tipografía. Lo hace cuando la fuente es **variable**, que es lo
+que usaban Montserrat e Inter. Los visores pintan las Type 3 glifo por glifo,
+sin caché, y además ese texto no se selecciona ni se busca bien.
+
+El informe usa ahora instancias fijas por peso (`montserrat-{400,500,600,700}`
+e `inter-400`, latin y latin-ext), generadas con `fontTools.varLib.instancer`
+desde las variables. El PDF incrusta TrueType (`CIDFontType2`) y pesa menos.
+La interfaz sigue usando Inter variable; las variables de Montserrat se
+borraron porque ya nadie las usa.
+
 ## Qué se guarda, y qué no
 
 La app **no guarda informes**. El archivo es el PDF que se descarga y se envía.
