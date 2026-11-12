@@ -17,6 +17,15 @@
 
   const t0 = globalThis.performance.now();
   const lines = [];
+  // Si la página nació oculta (precargada por Chrome mientras se escribía la
+  // dirección) y cuándo pasó a verse.
+  const visibility = [`${document.visibilityState}${document.prerendering ? '+prerender' : ''}@0`];
+  document.addEventListener('visibilitychange', () => {
+    visibility.push(`${document.visibilityState}@${Math.round(globalThis.performance.now() - t0)}`);
+    snap('visib');
+  });
+  document.addEventListener('prerenderingchange', () => snap('prerender'));
+  globalThis.addEventListener('pageshow', (e) => snap(e.persisted ? 'pageshow*' : 'pageshow'));
   const header = document.querySelector('.site-header');
   const vv = globalThis.visualViewport;
   const [nav] = globalThis.performance.getEntriesByType('navigation');
@@ -30,6 +39,7 @@
     );
     box.textContent =
       `nav=${nav?.type ?? '?'} url=${globalThis.location.pathname}${globalThis.location.hash} ua=${globalThis.navigator.userAgent.replace(/.*(CriOS\/[\d.]+|Version\/[\d.]+ .*Safari).*/, '$1')}\n` +
+      `visibilidad: ${visibility.join(' → ')}\n` +
       lines.slice(-9).join('\n');
   };
   snap('inicio');
