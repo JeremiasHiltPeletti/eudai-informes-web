@@ -147,97 +147,24 @@ body {
   background: var(--page-2);
 }
 
-/* Capas decorativas ------------------------------------------------------ */
-
-.wave,
-.watermark,
-.leaf {
+/* Fondo de la hoja: toda la decoración fija (ondas, marcas de agua, logotipo)
+   va aplanada en una sola imagen opaca por tipo de hoja.
+   Antes eran hasta seis PNG con transparencia superpuestos en cada página, y
+   el visor de PDF de Chrome —que en Windows dibuja por CPU— tenía que
+   mezclarlos uno por uno cada vez que se desplazaba la vista previa de
+   impresión. Una imagen opaca no necesita mezcla. Los fondos se generan a
+   partir del render del diseño original, a 2,5× para la impresora. */
+.page__bg {
   position: absolute;
-  pointer-events: none;
-}
-
-.wave {
-  inset-inline-start: 0;
-  inline-size: var(--page-w);
-  block-size: auto;
-}
-
-.wave--top {
-  inset-block-start: 0;
-  z-index: 1;
-}
-
-.wave--bottom {
-  inset-block-end: 0;
+  inset: 0;
   z-index: 0;
-  transform: translateY(40%);
-}
-
-.page--data .wave--bottom {
-  z-index: 1;
-}
-
-.watermark--tree {
-  inset-block-start: 17mm;
-  inset-inline-start: 132mm;
-  inline-size: 76mm;
-  block-size: auto;
-}
-
-.watermark--plant {
-  inset-block-end: 50mm;
-  inset-inline-start: -7mm;
-  inline-size: 52mm;
-  block-size: auto;
-}
-
-.leaf--corner {
-  z-index: 1;
-  inset-block-start: 223.4mm;
-  inset-inline-start: 152.8mm;
-  inline-size: 34.4mm;
-  block-size: auto;
+  inline-size: 100%;
+  block-size: 100%;
 }
 
 /* --------------------------------------------------------------------------
    Página 1 · portada
    -------------------------------------------------------------------------- */
-
-.cover__logo {
-  position: absolute;
-  inset-block-start: 46mm;
-  inset-inline: 0;
-  z-index: 2;
-  text-align: center;
-}
-
-.cover__logo img {
-  display: inline-block;
-  inline-size: 131mm;
-  block-size: auto;
-}
-
-.cover__divider {
-  position: absolute;
-  inset-block-start: 104.3mm;
-  inset-inline: 0;
-  z-index: 2;
-  display: flex;
-  gap: 4.5mm;
-  align-items: center;
-  justify-content: center;
-}
-
-.cover__divider span {
-  inline-size: 30.3mm;
-  block-size: var(--rule-thin);
-  background: var(--terracotta);
-}
-
-.cover__divider img {
-  inline-size: 13.5mm;
-  block-size: auto;
-}
 
 .cover__title {
   position: absolute;
@@ -362,15 +289,6 @@ body {
 /* --------------------------------------------------------------------------
    Páginas 2+ · encabezado común
    -------------------------------------------------------------------------- */
-
-.sheet__logo {
-  position: absolute;
-  inset-block-start: 8.6mm;
-  inset-inline-start: 3.4mm;
-  z-index: 3;
-  inline-size: 64mm;
-  block-size: auto;
-}
 
 .sheet__meta {
   position: absolute;
@@ -642,13 +560,13 @@ body {
 
 /* La hoja decorativa va dentro de la tarjeta y por detrás del cuerpo: en el
    original se dibujaba encima y tapaba el texto de las hojas más cargadas. */
-.leaf--watermark {
+.leaf-watermark {
+  position: absolute;
   inset-block-end: 6mm;
   inset-inline-end: 7mm;
   z-index: 0;
   inline-size: 34.4mm;
   block-size: auto;
-  opacity: 0.38;
 }
 
 /* Caja de medida: el paginador corta el texto justo donde deja de entrar. */

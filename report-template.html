@@ -107,20 +107,7 @@
 
     <!-- ================= Página 1 · portada ================= -->
     <section class="page page--cover">
-      <img class="watermark watermark--tree" src="assets/tree-watermark.png" alt="" />
-      <img class="watermark watermark--plant" src="assets/plant-watermark.png" alt="" />
-      <img class="wave wave--top" src="assets/top-wave.png" alt="" />
-      <img class="wave wave--bottom" src="assets/bottom-wave.png" alt="" />
-
-      <div class="cover__logo">
-        <img src="assets/logo.png" alt="Eudai" width="1187" height="430" />
-      </div>
-
-      <div class="cover__divider" aria-hidden="true">
-        <span></span>
-        <img src="assets/icons/divider-leaf.png" alt="" width="158" height="127" />
-        <span></span>
-      </div>
+      <img class="page__bg" src="assets/bg-cover.jpg" alt="" />
 
       <h1 class="cover__title"><span>INFORME</span><span>PROFESIONAL</span></h1>
       <span class="cover__rule" aria-hidden="true"></span>
@@ -170,8 +157,7 @@
 
     <!-- ================= Página 2 · datos ================= -->
     <section class="page page--data">
-      <img class="wave wave--top" src="assets/top-wave.png" alt="" />
-      <img class="sheet__logo" src="assets/logo.png" alt="Eudai" width="1187" height="430" />
+      <img class="page__bg" src="assets/bg-data.jpg" alt="" />
 
       <div class="sheet__meta">
         <span class="sheet__meta-title">INFORME PROFESIONAL</span>
@@ -287,16 +273,12 @@
           </ul>
         </div>
       </div>
-
-      <img class="leaf leaf--corner" src="assets/icons/divider-leaf.png" alt="" width="158" height="127" />
-      <img class="wave wave--bottom" src="assets/bottom-wave.png" alt="" />
     </section>
 
     <!-- ========= Página de conclusiones (se clona por cada página) ========= -->
     <template id="content-page">
       <section class="page page--data page--content">
-        <img class="wave wave--top" src="assets/top-wave.png" alt="" />
-        <img class="sheet__logo" src="assets/logo.png" alt="Eudai" width="1187" height="430" />
+        <img class="page__bg" src="assets/bg-content.jpg" alt="" />
 
         <div class="sheet__meta">
           <span class="sheet__meta-title">INFORME PROFESIONAL</span>
@@ -317,11 +299,9 @@
         </div>
 
         <div class="sheet__content">
-          <img class="leaf leaf--watermark" src="assets/icons/divider-leaf.png" alt="" width="158" height="127" />
+          <img class="leaf-watermark" src="assets/leaf-card.png" alt="" width="158" height="127" />
           <div class="content-body"></div>
         </div>
-
-        <img class="wave wave--bottom" src="assets/bottom-wave.png" alt="" />
       </section>
     </template>
   </body>

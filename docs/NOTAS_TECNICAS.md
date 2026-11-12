@@ -267,6 +267,27 @@ La clase `.card` del documento pasó a `.rcard`: era el único nombre que
 coincidía con uno de la interfaz, y al convivir las dos hojas la tarjeta del
 informe heredaba la sombra de la tarjeta del formulario.
 
+## Vista previa de impresión lenta en Chrome para Windows
+
+El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en
+Safari y en macOS iba fluido. El PDF generado tenía todas sus imágenes con
+máscara de transparencia —hasta seis PNG superpuestos por hoja, dos de ellos de
+1536×1024— y el visor de Chrome, que en Windows dibuja por CPU, las mezclaba
+una por una cada vez que se desplazaba la vista.
+
+Como la decoración de cada hoja es fija, ahora va aplanada en una sola imagen
+opaca por tipo de hoja (`assets/bg-cover.jpg`, `bg-data.jpg`,
+`bg-content.jpg`), generada a partir del render del diseño original a 2,5×. La
+hoja decorativa de la tarjeta de conclusiones también quedó aplanada sobre el
+color de la tarjeta, sin `opacity`. El PDF resultante no tiene ninguna máscara
+de transparencia ni estado de opacidad.
+
+El costo es peso: los fondos suman unos 470 KB contra los 145 KB de los PNG
+sueltos. Se descargan recién al generar el primer informe, no al abrir la app.
+
+Si hubiera que cambiar la decoración, los fondos se regeneran a partir de las
+capas originales, que quedaron en el historial de Git.
+
 ## Qué se guarda, y qué no
 
 La app **no guarda informes**. El archivo es el PDF que se descarga y se envía.
