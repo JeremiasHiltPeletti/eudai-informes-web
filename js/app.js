@@ -121,7 +121,7 @@ function renderRoute() {
   // la posición la repone el navegador (en una recarga, la que tenía). Mover
   // el scroll por código mientras la página carga dejaba, en Chrome para iOS,
   // la cabecera tapada por la barra del navegador.
-  if (!isFirstRender) globalThis.scrollTo({ top: 0, behavior: 'instant' });
+  if (!isFirstRender) document.body.scrollTo({ top: 0, behavior: 'instant' });
 
   // Sin recarga de página el lector de pantalla no anuncia nada por su cuenta:
   // se mueve el foco al título de la vista para que lea dónde quedó. En la
@@ -188,7 +188,7 @@ function differsFromBlank(draft) {
  */
 function saveScrollForReload() {
   try {
-    const y = currentView() === 'form' ? Math.round(globalThis.scrollY) : 0;
+    const y = currentView() === 'form' ? Math.round(document.body.scrollTop) : 0;
     globalThis.sessionStorage.setItem('eudai.scroll', String(y));
   } catch {
     // Sin almacenamiento de sesión, la repone el navegador al terminar.

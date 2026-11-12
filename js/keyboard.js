@@ -88,7 +88,8 @@ export function keepTypingVisible(form, header) {
     let delta = 0;
     if (target.bottom > visibleBottom) delta = target.bottom - visibleBottom;
     else if (target.top < visibleTop) delta = target.top - visibleTop;
-    if (Math.abs(delta) >= 1) globalThis.scrollBy({ top: delta, behavior: 'instant' });
+    // Scrollea <body>, no el documento (ver `html` en app.css).
+    if (Math.abs(delta) >= 1) document.body.scrollBy({ top: delta, behavior: 'instant' });
   };
 
   let frame = 0;

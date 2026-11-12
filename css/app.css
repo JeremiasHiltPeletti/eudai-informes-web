@@ -183,9 +183,15 @@
   margin: 0;
 }
 
+/* El documento no scrollea: scrollea <body>, que mide exactamente la ventana.
+   Es a propósito, por Chrome en iOS: su barra se esconde y reaparece al
+   scrollear el documento, y durante esa animación dejaba entre ella y la
+   cabecera una franja por la que asomaba el contenido (con la cabecera
+   `sticky` y también `fixed`). Si el documento no scrollea, Chrome no mueve su
+   barra, y el problema desaparece. Lo mismo vale para Safari. */
 html {
-  /* Lo que se enfoca o se busca por ancla no queda tapado por la cabecera. */
-  scroll-padding-block-start: calc(var(--header-block) + 1px + var(--space-3));
+  block-size: 100%;
+  overflow: hidden;
   -webkit-text-size-adjust: 100%;
 
   /* El color va también en la raíz: el área que asoma al sobre-scrollear, o
@@ -195,9 +201,13 @@ html {
 }
 
 body {
-  min-block-size: 100svh;
+  block-size: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   /* Lugar de la cabecera fija (su alto más el borde). */
   padding-block-start: calc(var(--header-block) + 1px);
+  /* Lo que se enfoca o se busca por ancla no queda tapado por la cabecera. */
+  scroll-padding-block-start: calc(var(--header-block) + 1px + var(--space-3));
   font-family: var(--font-sans);
   font-size: var(--step-0);
   line-height: var(--leading-normal);
@@ -977,6 +987,14 @@ select.control {
 @media print {
   body > *:not(.print-root) {
     display: none !important;
+  }
+
+  html,
+  body {
+    /* Para imprimir, el documento vuelve a fluir completo: <body> acotado a
+       la ventana recortaría el informe a una hoja. */
+    block-size: auto;
+    overflow: visible;
   }
 
   body {

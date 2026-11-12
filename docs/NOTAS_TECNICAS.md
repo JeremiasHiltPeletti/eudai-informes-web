@@ -403,6 +403,18 @@ cabecera volvió a `fixed` —ahora sin `env()`, con su alto fijo y un `padding`
 en `<body>` que repone su lugar—, porque a un elemento fijo lo posiciona el
 compositor sin ese retraso. El `::before` queda por si acaso.
 
+Tampoco alcanzó: con la barra de Chrome ya achicada seguía quedando una franja
+de unos 20 px con contenido. La solución definitiva fue sacar la animación de
+la barra de la ecuación: el documento no scrollea (`html { block-size: 100%;
+overflow: hidden }`) y scrollea `<body>`, que mide exactamente la ventana.
+Chrome sólo esconde y muestra su barra cuando scrollea el documento, así que
+la barra queda quieta y no hay franja posible. Todo lo que tocaba el scroll de
+la ventana (`restore.js`, `keyboard.js`, `renderRoute`, `scroll-padding`)
+pasó a `<body>`, y al imprimir `html` y `body` vuelven a fluir completos para
+que el informe no se recorte a una hoja. Se pierde que la barra del navegador
+se esconda al scrollear; el «tirar para recargar» sigue funcionando porque el
+sobre-scroll del contenedor se encadena al de la ventana.
+
 ### La cabecera tapada por la barra de Chrome
 
 Aun así, un segundo video mostró la cabecera oculta detrás de la barra de

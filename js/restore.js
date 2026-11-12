@@ -41,7 +41,8 @@
   try {
     const y = Number(globalThis.sessionStorage.getItem('eudai.scroll'));
     globalThis.sessionStorage.removeItem('eudai.scroll');
-    if (y > 0) globalThis.scrollTo({ top: y, behavior: 'instant' });
+    // Scrollea <body>, no el documento (ver `html` en app.css).
+    if (y > 0) document.body.scrollTo({ top: y, behavior: 'instant' });
   } catch {
     // La repone el navegador al terminar de cargar.
   }
