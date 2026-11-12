@@ -322,6 +322,25 @@ con «dd/mm/aaaa»— y después se llenaban, y a veces lo último no volvía:
   sola se perdía. Ahora basta con cualquier campo distinto de un formulario
   recién abierto (la fecha de hoy y la primera opción de cada desplegable).
 
+## Recargar sin que la página salte
+
+Al recargar más abajo en el formulario, el navegador reponía la altura después
+del primer pintado y la app la volvía a mandar arriba: en el celular se veía
+todo moverse. Ahora `boot.js` desactiva la reposición del navegador
+(`history.scrollRestoration = 'manual'`), la altura se guarda en
+`sessionStorage` al salir, y `app.js` la repone en el mismo momento en que
+muestra la vista, con el formulario todavía invisible. Al navegar entre vistas
+se sigue empezando arriba.
+
+Otros dos detalles del arranque: sin hash en la dirección, se corrige con
+`history.replaceState` (con `location.replace` la vista inicial se dibujaba dos
+veces), y en la carga inicial ya no se mueve el foco al título.
+
+También se quitó `overscroll-behavior-y: none` de `<html>`: bloquear el rebote
+interfiere con cómo Chrome y Safari en el celular esconden y muestran sus
+barras al hacer scroll. La franja negra que motivó esa regla ya la evita el
+color de fondo de `<html>`.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

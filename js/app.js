@@ -96,6 +96,7 @@ function renderRoute() {
     view.hidden = route !== hash;
     view.classList.toggle('is-entering', hasRouted && route === hash);
   }
+  const isFirstRender = !hasRouted;
   hasRouted = true;
 
   // `boot.js` adelantó qué vista mostrar en el primer pintado; desde acá manda
@@ -107,14 +108,48 @@ function renderRoute() {
     refreshDateLimits();
   }
 
-  globalThis.scrollTo({ top: 0, behavior: 'instant' });
+  // Al navegar se empieza arriba. En la carga inicial (una recarga, sobre
+  // todo) se vuelve a donde estaba: el navegador lo haría solo, pero después
+  // del primer pintado, y en el celular se veía la página saltar.
+  globalThis.scrollTo({ top: isFirstRender ? takeSavedScroll(hash) : 0, behavior: 'instant' });
 
   // Sin recarga de página el lector de pantalla no anuncia nada por su cuenta:
-  // se mueve el foco al título de la vista para que lea dónde quedó.
+  // se mueve el foco al título de la vista para que lea dónde quedó. En la
+  // carga inicial no hace falta: el lector ya lee la página desde el principio.
   const heading = document.getElementById(ROUTES[hash]).querySelector('h1');
-  if (heading) {
+  if (heading && !isFirstRender) {
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });
+  }
+}
+
+/* -- Posición al recargar ---------------------------------------------------- */
+
+const SCROLL_KEY = 'eudai.scroll';
+
+/** Guarda en qué vista y a qué altura estaba la página, para la recarga. */
+function saveScroll() {
+  try {
+    globalThis.sessionStorage.setItem(
+      SCROLL_KEY,
+      JSON.stringify({ hash: globalThis.location.hash, y: Math.round(globalThis.scrollY) }),
+    );
+  } catch {
+    // Sin almacenamiento, la recarga empieza arriba y listo.
+  }
+}
+
+/**
+ * Devuelve (y descarta) la altura guardada si es de esta misma vista.
+ * @param {string} hash
+ */
+function takeSavedScroll(hash) {
+  try {
+    const saved = JSON.parse(globalThis.sessionStorage.getItem(SCROLL_KEY) ?? 'null');
+    globalThis.sessionStorage.removeItem(SCROLL_KEY);
+    return saved?.hash === hash && Number.isFinite(saved.y) ? Math.max(0, saved.y) : 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -449,7 +484,10 @@ form.addEventListener('change', (event) => {
 
 // Lo último que se escribió no espera al autoguardado si la página se recarga,
 // se cierra o pasa a segundo plano (en el celular, cambiar de app).
-globalThis.addEventListener('pagehide', () => saveDraftSoon.flush());
+globalThis.addEventListener('pagehide', () => {
+  saveDraftSoon.flush();
+  saveScroll();
+});
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveDraftSoon.flush();
 });
@@ -518,5 +556,8 @@ if (!store.isPersistent()) {
   }
 }
 
-if (!ROUTES[globalThis.location.hash]) globalThis.location.replace(DEFAULT_ROUTE);
+// Sin hash, se corrige la dirección sin disparar `hashchange`: con
+// `location.replace` la vista inicial se dibujaba dos veces, la segunda con
+// la transición de entrada.
+if (!ROUTES[globalThis.location.hash]) globalThis.history.replaceState(null, '', DEFAULT_ROUTE);
 renderRoute();

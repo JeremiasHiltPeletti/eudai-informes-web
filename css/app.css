@@ -194,10 +194,6 @@ html {
      cuando el navegador móvil esconde su barra, la pinta el lienzo, y sin un
      fondo en <html> quedaba una franja negra al final del scroll. */
   background-color: var(--surface-page);
-
-  /* Sin rebote elástico, así no hay área de sobre-scroll que mostrar (y de
-     paso no se recarga la página por arrastrar de más hacia abajo). */
-  overscroll-behavior-y: none;
 }
 
 body {
