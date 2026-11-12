@@ -196,6 +196,8 @@ html {
 
 body {
   min-block-size: 100svh;
+  /* Lugar de la cabecera fija (su alto más el borde). */
+  padding-block-start: calc(var(--header-block) + 1px);
   font-family: var(--font-sans);
   font-size: var(--step-0);
   line-height: var(--leading-normal);
@@ -324,25 +326,24 @@ summary:focus-visible,
    de los dos problemas, no cuesta nada de composición y sobre una barra con
    el logo el efecto no aportaba nada. */
 .site-header {
-  /* `sticky`, dentro del flujo de la página: ocupa su lugar arriba del todo y
-     se queda pegada al borde al scrollear. Se probó `fixed` con un relleno de
-     `env(safe-area-inset-top)`, y era peor: en Chrome para iOS ese valor
-     cambia cada vez que la barra del navegador se esconde o reaparece, y la
-     cabecera y el relleno de <body> cambiaban de alto a la vez: la página
-     saltaba, y entre la cabecera y el notch quedaba un hueco. */
-  position: sticky;
+  /* `fixed`, y no `sticky`: mientras la barra de Chrome para iOS se esconde o
+     reaparece, WebKit recalcula la posición de un elemento `sticky` con
+     retraso, y entre la barra y la cabecera asomaba el contenido que pasa por
+     debajo. Un elemento fijo lo posiciona el compositor, sin ese retraso.
+     Su alto no depende de nada del navegador (una versión anterior sumaba
+     `env(safe-area-inset-top)`, que en Chrome cambia con la barra, y la
+     página saltaba). El lugar que deja libre lo repone el `padding` de <body>. */
+  position: fixed;
   inset-block-start: 0;
+  inset-inline: 0;
   z-index: var(--z-header);
   block-size: var(--header-block);
   background: var(--surface-page);
   border-block-end: 1px solid var(--line);
 }
 
-/* Mientras la barra de Chrome para iOS se esconde o reaparece, WebKit
-   actualiza con retraso la posición de lo que está pegado al borde y entre la
-   barra y la cabecera queda una franja por la que asoma el contenido que pasa
-   por debajo. El fondo de la cabecera se extiende hacia arriba, fuera de la
-   pantalla, y esa franja queda tapada con su mismo color. */
+/* Por si aun así se abre una franja encima de la cabecera: su fondo se
+   extiende hacia arriba, fuera de la pantalla, con su mismo color. */
 .site-header::before {
   content: "";
   position: absolute;

@@ -397,9 +397,11 @@ al sitio está siempre a la vista— y se queda pegada al borde al scrollear.
 
 Queda un detalle de WebKit: mientras la barra de Chrome se esconde o reaparece,
 la posición de la cabecera `sticky` se actualiza con retraso y entre ambas
-asoma por un instante el contenido que pasa por debajo. La cabecera lleva un
-`::before` con su mismo fondo, extendido 200 px hacia arriba (fuera de la
-pantalla), que tapa esa franja.
+asoma por un instante el contenido que pasa por debajo. Primero se probó un
+`::before` con el mismo fondo extendido hacia arriba, que no alcanzó; la
+cabecera volvió a `fixed` —ahora sin `env()`, con su alto fijo y un `padding`
+en `<body>` que repone su lugar—, porque a un elemento fijo lo posiciona el
+compositor sin ese retraso. El `::before` queda por si acaso.
 
 ### La cabecera tapada por la barra de Chrome
 
