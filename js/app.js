@@ -559,8 +559,14 @@ if (!store.isPersistent()) {
 
 keepTypingVisible(form, document.querySelector('.site-header'));
 
-// Sin hash, se corrige la dirección sin disparar `hashchange`: con
-// `location.replace` la vista inicial se dibujaba dos veces, la segunda con
-// la transición de entrada.
-if (!ROUTES[globalThis.location.hash]) globalThis.history.replaceState(null, '', DEFAULT_ROUTE);
+// Sin hash (se entró escribiendo la dirección) la dirección se deja como está:
+// es el inicio. Cambiarla mientras la página carga —aunque sea con
+// `replaceState`— hacía que Chrome para iOS reacomodara su barra a destiempo y
+// la cabecera quedara tapada debajo de ella hasta recargar. Sólo se corrige
+// una ruta que no existe, o la vista previa sin informe en memoria, y sin
+// disparar `hashchange` (la vista inicial no se dibuja dos veces).
+const initialHash = globalThis.location.hash;
+if (initialHash && (!ROUTES[initialHash] || initialHash === '#/vista-previa')) {
+  globalThis.history.replaceState(null, '', DEFAULT_ROUTE);
+}
 renderRoute();

@@ -414,6 +414,17 @@ marca en `sessionStorage` (ya se mostró en esta pestaña) y no con el tipo de
 navegación: el «Volver a cargar» del menú de Chrome en iOS no siempre se
 informa como `reload`.
 
+### Entrar escribiendo la dirección
+
+El patrón de los videos era constante: la cabecera quedaba tapada al entrar
+escribiendo `eudai-informes.netlify.app` en la barra, y aparecía tras
+recargar. La diferencia entre los dos casos es la dirección: al entrar no tiene
+`#/`, y la app se lo agregaba durante la carga con `history.replaceState`; al
+recargar, ya lo tiene y no se toca. Ese cambio de dirección en plena carga
+alcanza para que Chrome en iOS reacomode su barra a destiempo. Ahora una
+dirección sin hash se deja como está (es el inicio); sólo se corrige una ruta
+inexistente o la vista previa sin informe.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en
