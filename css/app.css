@@ -9,11 +9,16 @@
    1. Tipografías (variables, auto-hospedadas: sin terceros, CSP estricta)
    -------------------------------------------------------------------------- */
 
+/* `optional` y no `swap`: con `swap` el texto se dibuja con la tipografía del
+   sistema y se redibuja cuando llega Inter, y en el celular eso se ve como un
+   salto de todos los textos y botones. Inter está precargada, así que casi
+   siempre llega a tiempo; si no, esa carga se queda con la del sistema y la
+   siguiente ya la tiene en caché. */
 @font-face {
   font-family: "Inter var";
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: optional;
   src: url("../assets/fonts/inter-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
@@ -24,7 +29,7 @@
   font-family: "Inter var";
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: optional;
   src: url("../assets/fonts/inter-latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
     U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
@@ -139,10 +144,12 @@
      pellizco para ampliar y es un incumplimiento de accesibilidad (WCAG 1.4.4). */
   --control-font-size: max(16px, var(--step--1));
 
-  --header-height: 4.5rem;
   /* El logotipo es un lockup apaisado (2,8:1): con poca altura queda diminuto
      en el celular, que es donde más se usa la app. */
   --brand-logo-height: clamp(3.5rem, 2.9rem + 2.6vw, 4.5rem);
+  /* Alto de la cabecera: el logo, su área de toque y el aire de la barra. */
+  --header-block: calc(var(--brand-logo-height) + 2rem);
+  --header-offset: calc(var(--header-block) + 1px + env(safe-area-inset-top, 0px));
   --z-header: 10;
   --z-toast: 60;
 }
@@ -178,6 +185,8 @@
 }
 
 html {
+  /* Lo que se enfoca o se busca por ancla no queda tapado por la cabecera. */
+  scroll-padding-block-start: calc(var(--header-offset) + var(--space-3));
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
 
@@ -193,6 +202,8 @@ html {
 
 body {
   min-block-size: 100svh;
+  /* Lugar de la cabecera fija. */
+  padding-block-start: var(--header-offset);
   font-family: var(--font-sans);
   font-size: var(--step-0);
   line-height: var(--leading-normal);
@@ -321,9 +332,18 @@ summary:focus-visible,
    de los dos problemas, no cuesta nada de composición y sobre una barra con
    el logo el efecto no aportaba nada. */
 .site-header {
-  position: sticky;
+  /* `fixed` y no `sticky`: en iOS una barra `sticky` se despega del borde
+     mientras la barra del navegador se esconde o reaparece, y el contenido se
+     ve pasar por el hueco entre la cabecera y el notch. Una barra fija queda
+     anclada al borde, y Safari además extiende su color a la zona de la hora.
+     El lugar que deja de ocupar lo repone el `padding` de <body>. */
+  position: fixed;
   inset-block-start: 0;
+  inset-inline: 0;
   z-index: var(--z-header);
+  box-sizing: content-box;
+  block-size: var(--header-block);
+  padding-block-start: env(safe-area-inset-top, 0px);
   background: var(--surface-page);
   border-block-end: 1px solid var(--line);
 }
@@ -333,8 +353,7 @@ summary:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  min-block-size: var(--header-height);
-  padding-block: var(--space-3);
+  block-size: 100%;
 }
 
 .brand {
@@ -367,14 +386,25 @@ summary:focus-visible,
   display: none;
 }
 
-.view {
+/* Primer pintado: `boot.js` avisa si hay que abrir directo en el formulario,
+   así no se ve el inicio por un instante al recargar. */
+[data-boot="form"] #view-home {
+  display: none;
+}
+
+[data-boot="form"] #view-form {
+  display: block;
+}
+
+/* La transición es sólo de opacidad y sólo al navegar (el router marca la
+   vista que entra): en la carga inicial nada se mueve. */
+.view.is-entering {
   animation: view-in var(--dur) var(--ease) both;
 }
 
 @keyframes view-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
 }
 
@@ -925,6 +955,10 @@ select.control {
 @media print {
   body > *:not(.print-root) {
     display: none !important;
+  }
+
+  body {
+    padding: 0;
   }
 
   .print-root {

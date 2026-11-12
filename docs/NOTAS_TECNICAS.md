@@ -283,6 +283,29 @@ que iOS la achica un poco más y entra también a lo alto. En iPhone y iPad el
 informe sale entonces con un margen blanco alrededor (iOS no permite imprimir a
 sangre desde la web); en el resto de los navegadores sigue a página completa.
 
+## Carga sin saltos y cabecera fija en el celular
+
+Al entrar o recargar en el celular, los textos y botones se movían un instante.
+Eran tres cosas sumadas, y ninguna un desplazamiento de layout medible (el CLS
+ya daba 0):
+
+- la transición de entrada de cada vista incluía un desplazamiento de 8 px y
+  corría también en la carga inicial. Ahora es sólo de opacidad y sólo al
+  navegar: el router marca con `is-entering` la vista que entra, salvo la
+  primera;
+- Inter se cargaba con `font-display: swap`, que dibuja con la tipografía del
+  sistema y redibuja al llegar la fuente. Pasó a `optional` (está precargada);
+- al recargar en `#/nuevo` se veía el inicio hasta que corría `app.js`, que es
+  un módulo y se ejecuta después del primer pintado. `js/boot.js`, un script
+  clásico de pocas líneas, anota la ruta en `<html>` antes de pintar y el CSS
+  muestra la vista correcta desde el primer cuadro.
+
+La cabecera pasó de `sticky` a `fixed`: en iOS una barra `sticky` se despega
+del borde mientras la barra del navegador se esconde o reaparece, y quedaba un
+hueco entre ella y el notch. Su lugar lo repone un `padding` en `<body>`
+(`--header-offset`, que suma `env(safe-area-inset-top)`), y
+`scroll-padding-block-start` evita que tape lo que se enfoca.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

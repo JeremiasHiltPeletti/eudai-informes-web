@@ -67,6 +67,9 @@ const ROUTES = Object.freeze({
 
 const DEFAULT_ROUTE = '#/';
 
+/** Si ya se mostró alguna vista (la primera no lleva transición). */
+let hasRouted = false;
+
 /** Muestra la vista que corresponde al hash actual. */
 function renderRoute() {
   const hash = ROUTES[globalThis.location.hash] ? globalThis.location.hash : DEFAULT_ROUTE;
@@ -86,9 +89,18 @@ function renderRoute() {
     return;
   }
 
+  // La transición es sólo para cuando se navega: en la carga inicial la vista
+  // aparece ya en su lugar, sin ningún movimiento.
   for (const [route, id] of Object.entries(ROUTES)) {
-    document.getElementById(id).hidden = route !== hash;
+    const view = document.getElementById(id);
+    view.hidden = route !== hash;
+    view.classList.toggle('is-entering', hasRouted && route === hash);
   }
+  hasRouted = true;
+
+  // `boot.js` adelantó qué vista mostrar en el primer pintado; desde acá manda
+  // el router.
+  delete document.documentElement.dataset.boot;
 
   if (hash === '#/nuevo') {
     prepareForm();
