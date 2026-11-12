@@ -14,7 +14,7 @@ La vista previa usa información ficticia. Este repositorio no incluye informes 
 
 ## El problema
 
-Preparar informes similares de forma repetida exige ordenar datos del paciente y del profesional, mantener una presentación consistente y recuperar trabajos anteriores. También es importante saber dónde se guardan los datos y cómo respaldarlos.
+Preparar informes similares de forma repetida exige ordenar los datos del paciente y del profesional, mantener una presentación consistente y no equivocarse al transcribir. Y como se trata de información de salud, importa tanto el resultado como saber qué queda guardado y dónde.
 
 ## La solución
 
