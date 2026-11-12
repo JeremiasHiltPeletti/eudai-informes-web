@@ -70,36 +70,6 @@ export function confirmAction({ title, body, confirmLabel = 'Confirmar' }) {
 }
 
 /**
- * Descarga un texto como archivo.
- *
- * @param {string} filename
- * @param {string} content
- * @param {string} [type='application/json']
- */
-export function downloadText(filename, content, type = 'application/json') {
-  const url = URL.createObjectURL(new Blob([content], { type: `${type};charset=utf-8` }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  // Se revoca en la siguiente vuelta del bucle de eventos: si se revoca antes,
-  // Safari cancela la descarga que acaba de empezar.
-  globalThis.setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
-/**
- * Lee un archivo de texto elegido por el usuario.
- *
- * @param {File} file
- * @returns {Promise<string>}
- */
-export function readTextFile(file) {
-  return file.text();
-}
-
-/**
  * Ejecuta una función como mucho una vez por cuadro de animación.
  * Se usa para el reescalado de la vista previa al cambiar el tamaño.
  *

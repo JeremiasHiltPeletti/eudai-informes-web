@@ -18,14 +18,14 @@ Preparar informes similares de forma repetida exige ordenar datos del paciente y
 
 ## La solución
 
-Una herramienta centrada en el flujo completo del informe: carga de datos, validación, redacción, vista previa paginada, impresión en PDF e historial local.
+Una herramienta centrada en el flujo completo del informe: carga de datos, validación, redacción, vista previa paginada y descarga en PDF.
 
 ## Funcionalidades
 
 - Formulario con campos del paciente, tipo de informe, especialidad, contenido y profesional responsable.
 - Validación y saneamiento de los datos antes de componer el documento.
 - Vista previa A4 paginada y descarga mediante la impresión del navegador.
-- Borrador automático, historial con búsqueda e importación y exportación de respaldos JSON.
+- Borrador automático del informe en curso, para que cerrar la pestaña no se lleve el trabajo.
 
 ## Tecnologías
 
@@ -38,7 +38,7 @@ HTML, CSS y JavaScript nativo con módulos ES. No requiere dependencias ni compi
 | `index.html`, `css/app.css` | Formulario e interfaz adaptable |
 | `report-template.html`, `css/report.css` | Documento A4 y estilos de impresión |
 | `js/schema.js`, `js/sanitize.js`, `js/validate.js` | Campos, saneamiento y validación |
-| `js/store.js` | Borrador, historial y respaldos locales |
+| `js/store.js` | Borrador del informe en curso |
 | `js/report.js`, `js/app.js`, `js/ui.js`, `js/format.js` | Composición del informe y flujo de la interfaz |
 | `_headers`, `netlify.toml` | Cabeceras y configuración del despliegue |
 
@@ -54,13 +54,15 @@ Abrí `http://localhost:8000/`. Los módulos y la plantilla necesitan servirse p
 
 ## Alcance de esta versión
 
-**El archivo del informe es el PDF**: se genera, se descarga y se envía. El historial del navegador es sólo un acceso rápido a lo reciente, no el archivo.
+**El archivo del informe es el PDF**: se genera, se previsualiza, se descarga y se envía. La aplicación **no guarda los informes**.
 
-Esa distinción importa porque el historial vive en el `localStorage` de cada navegador: **no se comparte entre dispositivos**. Un informe hecho en el celular no aparece en la computadora del consultorio, y un respaldo exportado contiene únicamente los informes de ese equipo.
+Esa decisión es deliberada. Una versión anterior mantenía un historial en el navegador, pero el historial vive en el `localStorage` de cada equipo y no se comparte entre dispositivos: un informe hecho en el celular nunca aparecía en la computadora del consultorio. No servía como archivo y, mientras tanto, iba acumulando datos de salud en cada equipo donde se abrió la aplicación. Se quitó.
 
-Para que no queden datos de salud acumulándose indefinidamente en cada dispositivo donde se abrió la aplicación, **los informes del historial se borran solos a los 90 días**. El plazo se define en `RETENTION_DAYS` (`js/store.js`) y la interfaz lo muestra leyéndolo de esa misma constante, de modo que el aviso al usuario no puede quedar desfasado del comportamiento.
+Lo único que se guarda es el **borrador en curso**: el formulario que se está escribiendo, para que un cierre accidental no se lleve el trabajo. Se sobrescribe permanentemente y se borra al descargar el PDF, así que nunca hay más de un informe a medio escribir almacenado.
 
-La aplicación no tiene backend ni envía informes a ningún servidor, así que no existe una base de datos que pueda filtrarse. El control de acceso efectivo es el bloqueo del dispositivo: quien abre el navegador ve el historial de ese equipo.
+Al abrir la aplicación se **borran los informes que hubieran quedado guardados por versiones anteriores**. Quitar la pantalla que los mostraba sin borrar los datos dejaría información de pacientes dormida en el navegador, invisible y fuera del alcance del usuario.
+
+No hay backend: no existe una base de datos que pueda filtrarse, y nada sale del dispositivo. El control de acceso efectivo es el bloqueo del equipo.
 
 ## Decisiones técnicas
 

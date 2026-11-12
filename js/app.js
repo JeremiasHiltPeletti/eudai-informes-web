@@ -10,10 +10,9 @@ import { FIELD_NAMES } from './schema.js';
 import { validateReport, validateField } from './validate.js';
 import * as store from './store.js';
 import { renderReport, printReport } from './report.js';
-import { notify, confirmAction, downloadText, onNextFrame, debounce } from './ui.js';
+import { notify, confirmAction, onNextFrame, debounce } from './ui.js';
 import {
   todayISO,
-  formatDate,
   formatDni,
   formatPhone,
   formatInsurer,
@@ -29,25 +28,24 @@ const submitButton = document.querySelector('[data-submit]');
 const submitLabel = document.querySelector('[data-submit-label]');
 const charCount = document.querySelector('[data-char-count]');
 
-const historyList = document.querySelector('[data-history-list]');
-const historyStatus = document.querySelector('[data-history-status]');
-const historySearch = /** @type {HTMLInputElement} */ (document.querySelector('[data-history-search]'));
-const historyItemTemplate = /** @type {HTMLTemplateElement} */ (document.querySelector('[data-history-item]'));
-const historyEmptyTemplate = /** @type {HTMLTemplateElement} */ (document.querySelector('[data-history-empty]'));
-const homeCount = document.querySelector('[data-home-count]');
-
 const previewStage = document.querySelector('[data-preview-stage]');
 const previewFrame = /** @type {HTMLIFrameElement} */ (document.querySelector('[data-preview-frame]'));
 const previewStatus = document.querySelector('[data-preview-status]');
 const printButton = document.querySelector('[data-print]');
-const printFrame = /** @type {HTMLIFrameElement} */ (document.querySelector('[data-print-frame]'));
-
-const importInput = /** @type {HTMLInputElement} */ (document.querySelector('[data-import-input]'));
 
 /* -- Estado ---------------------------------------------------------------- */
 
-/** Informe que se está viendo en la vista previa. */
+/** Informe que se está viendo en la vista previa. Vive sólo en memoria. */
 let currentReport = null;
+
+/**
+ * Si ya se pidió la descarga del informe en pantalla.
+ *
+ * Registra que el usuario apretó «Descargar PDF», no que el archivo haya
+ * terminado de guardarse: el navegador no avisa si el diálogo de impresión se
+ * canceló. Alcanza para no insistir con la advertencia a quien ya descargó.
+ */
+let downloaded = false;
 
 /** Medidas del documento renderizado, para reescalar la vista previa. */
 let previewMetrics = { width: 794, height: 1123, pages: 1 };
@@ -63,7 +61,6 @@ const touchedFields = new Set();
 const ROUTES = Object.freeze({
   '#/': 'view-home',
   '#/nuevo': 'view-form',
-  '#/historial': 'view-history',
   '#/vista-previa': 'view-preview',
 });
 
@@ -72,6 +69,14 @@ const DEFAULT_ROUTE = '#/';
 /** Muestra la vista que corresponde al hash actual. */
 function renderRoute() {
   const hash = ROUTES[globalThis.location.hash] ? globalThis.location.hash : DEFAULT_ROUTE;
+
+  // Una ruta que no existe —un marcador viejo a `#/historial`, por ejemplo—
+  // muestra el inicio; la barra de direcciones se corrige para que no quede
+  // mostrando algo que ya no está.
+  if (globalThis.location.hash && globalThis.location.hash !== hash) {
+    globalThis.location.replace(hash);
+    return;
+  }
 
   // La vista previa depende de un informe en memoria: si se llega por un
   // enlace directo o tras recargar, no hay nada que mostrar.
@@ -88,8 +93,6 @@ function renderRoute() {
     prepareForm();
     refreshDateLimits();
   }
-  if (hash === '#/historial') renderHistory();
-  if (hash === '#/') updateHomeCount();
 
   globalThis.scrollTo({ top: 0, behavior: 'instant' });
 
@@ -268,33 +271,23 @@ async function submitForm() {
 
   setBusy(true);
   try {
-    const saved = store.saveReport(data);
-    currentReport = saved;
-
-    // El formulario se vacía apenas el informe queda guardado, y antes de
-    // armar la vista previa: si se limpiara después, un fallo al renderizar
-    // dejaría los datos del paciente anterior cargados y el informe siguiente
-    // podría enviarse con el nombre equivocado. Lo que se muestra sale de
-    // `saved`, no del formulario, así que vaciarlo acá no afecta nada.
-    resetForm();
+    // El informe vive sólo en memoria: no se guarda nada. El formulario y el
+    // borrador se conservan hasta que se descargue el PDF, para poder volver,
+    // corregir y regenerar sin tener que cargar todo de nuevo.
+    currentReport = data;
+    downloaded = false;
 
     // Primero se muestra la vista y recién después se renderiza: el documento
     // se pagina midiendo alturas reales, y eso exige que el iframe esté
     // efectivamente maquetado, no oculto con `display: none`.
     goTo('#/vista-previa');
-    await showPreview(saved);
-
-    notify('Informe guardado. Ya podés descargarlo en PDF.');
+    await showPreview(data);
   } catch (error) {
-    if (error instanceof store.StorageError) {
-      notify(error.message, 'error');
-      return;
-    }
-    // El informe ya está guardado: lo que falló es la vista previa. Se manda al
-    // historial, desde donde se puede descargar igual, en vez de dejar a la
-    // vista un marco vacío.
-    notify('El informe se guardó, pero no se pudo mostrar la vista previa.', 'error');
-    goTo('#/historial');
+    notify(
+      error instanceof Error ? error.message : 'No se pudo generar el informe.',
+      'error',
+    );
+    goTo('#/nuevo');
   } finally {
     setBusy(false);
   }
@@ -355,151 +348,18 @@ function scalePreview() {
 }
 
 /**
- * Imprime un informe. Desde la vista previa reutiliza el marco visible;
- * desde el historial usa el marco oculto, que se renderiza al momento.
+ * Abre la impresión del informe que está en la vista previa.
  *
- * @param {Record<string, string>} data
- * @param {HTMLIFrameElement} frame
+ * Descargar es el final del trabajo: el formulario y el borrador se vacían,
+ * porque lo que había que conservar ya está en el PDF.
  */
-async function print(data, frame) {
+function print() {
   try {
-    if (frame === printFrame) await renderReport(frame, data);
-    printReport(frame);
+    printReport(previewFrame);
+    downloaded = true;
+    resetForm();
   } catch (error) {
     notify(error instanceof Error ? error.message : 'No se pudo abrir la impresión.', 'error');
-  }
-}
-
-/* -- Historial ------------------------------------------------------------- */
-
-/**
- * Quita acentos y mayúsculas para que "Perez" encuentre a "Pérez".
- *
- * @param {string} value
- * @returns {string}
- */
-function foldText(value) {
-  return String(value)
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase();
-}
-
-/** Dibuja el historial aplicando el filtro de búsqueda. */
-function renderHistory() {
-  if (!historyList) return;
-
-  const query = foldText(historySearch?.value ?? '').trim();
-  const all = store.listReports();
-  const reports = query
-    ? all.filter((report) =>
-        foldText(
-          `${report.paciente} ${report.tipo_informe} ${report.especialidad} ${report.profesional_responsable}`,
-        ).includes(query),
-      )
-    : all;
-
-  historyList.replaceChildren();
-
-  if (reports.length === 0) {
-    const empty = historyEmptyTemplate.content.cloneNode(true);
-    const isFiltered = all.length > 0;
-    empty.querySelector('[data-empty-title]').textContent = isFiltered
-      ? 'Sin resultados'
-      : 'Todavía no hay informes';
-    empty.querySelector('[data-empty-body]').textContent = isFiltered
-      ? 'Probá con otro nombre, tipo de informe o especialidad.'
-      : 'Los informes que generes van a aparecer acá.';
-    historyList.append(empty);
-  } else {
-    for (const report of reports) {
-      historyList.append(buildHistoryItem(report));
-    }
-  }
-
-  if (historyStatus) {
-    historyStatus.textContent = `${reports.length} de ${all.length} informes`;
-  }
-  updateHomeCount(all.length);
-}
-
-/**
- * Construye una fila del historial clonando la plantilla.
- * Todo dato del informe entra por `textContent`, nunca por `innerHTML`.
- *
- * @param {Record<string, string>} report
- * @returns {DocumentFragment}
- */
-function buildHistoryItem(report) {
-  const item = historyItemTemplate.content.cloneNode(true);
-
-  item.querySelector('[data-name]').textContent = report.paciente || 'Sin nombre';
-  item.querySelector('[data-type]').textContent = report.tipo_informe || 'Informe';
-  item.querySelector('[data-specialty]').textContent = report.especialidad || '—';
-  item.querySelector('[data-date]').textContent = formatDate(report.fecha) || '—';
-
-  const pdfButton = item.querySelector('[data-action="print"]');
-  pdfButton.dataset.id = report.id;
-  pdfButton.setAttribute('aria-label', `Descargar el PDF de ${report.paciente}`);
-
-  const deleteButton = item.querySelector('[data-action="delete"]');
-  deleteButton.dataset.id = report.id;
-  deleteButton.setAttribute('aria-label', `Eliminar el informe de ${report.paciente}`);
-
-  return item;
-}
-
-/**
- * Muestra la cantidad de informes guardados en el botón de inicio.
- *
- * @param {number} [total] Cantidad ya conocida; si no se pasa, se relee.
- *   Leerla implica parsear y sanear todo el almacenamiento, y el historial ya
- *   la tiene calculada cada vez que se dibuja.
- */
-function updateHomeCount(total = store.listReports().length) {
-  if (!homeCount) return;
-  homeCount.textContent = total > 0 ? `(${total})` : '';
-  homeCount.hidden = total === 0;
-}
-
-/** Descarga una copia de respaldo de todos los informes. */
-function exportBackup() {
-  const total = store.listReports().length;
-  if (total === 0) {
-    notify('Todavía no hay informes para exportar.', 'error');
-    return;
-  }
-  downloadText(`eudai-informes-${todayISO()}.json`, store.exportReports());
-  notify(`Copia de ${total} ${total === 1 ? 'informe' : 'informes'} descargada.`);
-}
-
-/**
- * Importa una copia de respaldo.
- *
- * @param {File} file
- */
-async function importBackup(file) {
-  // Un archivo de decenas de MB congela la pestaña mientras se parsea. Una
-  // copia real de esta app pesa kilobytes: si llega algo así, es otra cosa.
-  const MAX_BYTES = 8 * 1024 * 1024;
-  if (file.size > MAX_BYTES) {
-    notify('El archivo es demasiado grande para ser una copia de informes.', 'error');
-    return;
-  }
-
-  try {
-    const { imported, skipped } = store.importReports(await file.text());
-    renderHistory();
-    notify(
-      imported === 0
-        ? 'El archivo no traía informes nuevos: ya estaban todos.'
-        : `Se importaron ${imported} informes${skipped ? ` (${skipped} ya estaban)` : ''}.`,
-    );
-  } catch (error) {
-    notify(
-      error instanceof store.StorageError ? error.message : 'No se pudo leer el archivo.',
-      'error',
-    );
   }
 }
 
@@ -560,63 +420,40 @@ document.querySelector('[data-clear]').addEventListener('click', async () => {
   notify('Formulario vacío.');
 });
 
-document.querySelector('[data-preview-back]').addEventListener('click', () => {
-  goTo('#/');
+/**
+ * ¿Puede salir de la vista previa?
+ *
+ * Sin historial, el PDF es la única copia del informe. Si todavía no se
+ * descargó conviene avisarlo, aunque lo cargado en el formulario siga a salvo
+ * como borrador.
+ *
+ * @returns {Promise<boolean>}
+ */
+async function canLeavePreview() {
+  if (downloaded || !currentReport) return true;
+  return confirmAction({
+    title: '¿Salir sin descargar el PDF?',
+    body: 'El informe no queda guardado: para enviarlo hay que descargarlo. Lo que cargaste en el formulario se conserva como borrador.',
+    confirmLabel: 'Salir igual',
+  });
+}
+
+document.querySelector('[data-preview-back]').addEventListener('click', async () => {
+  if (await canLeavePreview()) goTo('#/nuevo');
+});
+
+// El logo es la otra salida de la vista previa, así que pasa por el mismo aviso.
+document.querySelector('.brand').addEventListener('click', async (event) => {
+  if (document.getElementById('view-preview').hidden) return;
+  event.preventDefault();
+  if (await canLeavePreview()) goTo('#/');
 });
 
 printButton.addEventListener('click', () => {
-  if (currentReport) print(currentReport, previewFrame);
-});
-
-historyList?.addEventListener('click', async (event) => {
-  const button = event.target.closest('[data-action]');
-  if (!button) return;
-
-  const report = store.getReport(button.dataset.id);
-  if (!report) {
-    notify('Ese informe ya no está disponible.', 'error');
-    renderHistory();
-    return;
-  }
-
-  if (button.dataset.action === 'print') {
-    await print(report, printFrame);
-    return;
-  }
-
-  const confirmed = await confirmAction({
-    title: '¿Eliminar el informe?',
-    body: `Se borra el informe de ${report.paciente} de forma permanente. Esta acción no se puede deshacer.`,
-    confirmLabel: 'Eliminar',
-  });
-  if (!confirmed) return;
-
-  store.deleteReport(report.id);
-  renderHistory();
-  notify('Informe eliminado.');
-});
-
-historySearch?.addEventListener('input', debounce(renderHistory, 150));
-
-document.querySelector('[data-export]').addEventListener('click', exportBackup);
-
-document.querySelector('[data-import]').addEventListener('click', () => importInput.click());
-
-importInput.addEventListener('change', () => {
-  const [file] = importInput.files ?? [];
-  if (file) importBackup(file);
-  importInput.value = ''; // permite reimportar el mismo archivo
+  if (currentReport) print();
 });
 
 globalThis.addEventListener('hashchange', renderRoute);
-
-// Con la app abierta en dos pestañas, guardar o borrar en una dejaba el
-// historial de la otra mostrando datos viejos hasta recargar.
-globalThis.addEventListener('storage', (event) => {
-  if (event.key !== null && !event.key.startsWith('eudai.informes')) return;
-  if (!document.getElementById('view-history').hidden) renderHistory();
-  updateHomeCount();
-});
 
 // El contenedor cambia de ancho por más motivos que un resize de ventana
 // (rotación, aparición de la barra de scroll, zoom del navegador).
@@ -628,19 +465,11 @@ if (previewStage && 'ResizeObserver' in globalThis) {
 
 /* -- Arranque -------------------------------------------------------------- */
 
-// El plazo de conservación se escribe desde la constante de `store.js`, para
-// que el aviso al usuario nunca contradiga lo que hace el código.
-for (const slot of document.querySelectorAll('[data-retention-days]')) {
-  slot.textContent = String(store.RETENTION_DAYS);
-}
-
 if (!store.isPersistent()) {
   const text = document.querySelector('[data-privacy-text]');
   if (text) {
     text.textContent =
-      'Este navegador tiene el almacenamiento bloqueado: los informes van a existir sólo mientras la pestaña esté abierta. Descargá el PDF antes de cerrarla.';
-    const scope = document.querySelector('.history__scope');
-    if (scope) scope.textContent = 'Los informes de esta sesión se pierden al cerrar la pestaña.';
+      'Este navegador tiene el almacenamiento bloqueado: no se puede guardar el borrador mientras escribís. Descargá el PDF antes de cerrar la pestaña, porque es la única copia del informe.';
   }
 }
 

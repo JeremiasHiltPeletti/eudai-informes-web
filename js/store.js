@@ -1,55 +1,29 @@
 /**
- * Persistencia de informes en el navegador.
+ * Persistencia en el navegador.
  *
- * Los informes viven en `localStorage`, igual que en la versión original.
- * Eso implica dos cosas que la interfaz dice explícitamente: los datos no
- * salen del dispositivo (bien para la confidencialidad) y no hay copia de
- * respaldo automática (por eso existen exportar e importar).
+ * La app **no guarda informes**. El archivo del informe es el PDF que se
+ * descarga y se envía; guardar además una copia en el navegador significaba
+ * acumular datos de salud en cada equipo donde se abrió la app, sin que
+ * aportara nada al flujo real de trabajo.
  *
- * Todo lo que sale de aquí pasa por el saneador antes de volver a la app: el
- * almacenamiento del navegador es editable por quien tenga la consola abierta,
- * así que se trata como entrada no confiable, no como una base de datos.
+ * Lo único que se guarda es el borrador en curso: el formulario que se está
+ * escribiendo, para que cerrar la pestaña por accidente no se lleve el
+ * trabajo. Se sobrescribe a cada rato y se borra al generar el informe, así
+ * que nunca hay más de un informe a medio escribir en el almacenamiento.
  */
 
 import { FIELD_NAMES } from './schema.js';
 import { sanitizeField } from './validate.js';
-import { sanitizeText } from './sanitize.js';
 
-const STORAGE_KEY = 'eudai.informes.v1';
 const DRAFT_KEY = 'eudai.borrador.v1';
-const LEGACY_KEY = 'reports';
-const SCHEMA_VERSION = 1;
-
-/** Tope de informes por importación, para no colgar la pestaña con un archivo ajeno. */
-const MAX_IMPORT = 5000;
 
 /**
- * Días que un informe se conserva en este navegador antes de borrarse solo.
- *
- * El archivo real del informe es el PDF que se descarga y se envía; esto es
- * nada más un acceso rápido a lo reciente. Sin un vencimiento, datos de salud
- * quedarían acumulándose para siempre en cada equipo donde se abrió la app
- * —incluidos los que ya no se usan—, sin que nadie se acuerde de que están.
- *
- * Para cambiarlo alcanza con este número: la interfaz lo muestra leyéndolo de
- * acá, así que el aviso al usuario nunca queda desfasado del comportamiento.
+ * Claves de versiones anteriores, cuando la app sí guardaba un historial.
+ * Se borran al arrancar: quitar la pantalla que los mostraba sin borrar los
+ * datos dejaría informes de pacientes dormidos en el navegador, invisibles y
+ * fuera del alcance del usuario, que es peor que tenerlos a la vista.
  */
-export const RETENTION_DAYS = 90;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** Error de almacenamiento con una causa que la interfaz puede traducir. */
-export class StorageError extends Error {
-  /**
-   * @param {'quota'|'unavailable'|'corrupt'|'format'} code
-   * @param {string} message
-   */
-  constructor(code, message) {
-    super(message);
-    this.name = 'StorageError';
-    this.code = code;
-  }
-}
+const OBSOLETE_KEYS = ['eudai.informes.v1', 'reports'];
 
 /**
  * `localStorage` lanza al leerlo en algunos navegadores (modo privado antiguo,
@@ -76,109 +50,34 @@ const backend = (() => {
   }
 })();
 
-/** @returns {boolean} true si los datos sobreviven al cierre del navegador. */
+/** @returns {boolean} true si el borrador sobrevive al cierre del navegador. */
 export function isPersistent() {
   return backend.persistent;
 }
 
 /**
- * Identificador único y ordenable en el tiempo: prefijo temporal en base 36
- * más un sufijo aleatorio, para que dos informes creados en el mismo
- * milisegundo no puedan colisionar (lo que sí pasaba usando `Date.now()`).
+ * Borra los informes que hayan quedado guardados por versiones anteriores.
+ * Se ejecuta una sola vez, al cargar el módulo.
  *
- * @returns {string}
+ * @returns {number} Cuántas claves obsoletas había.
  */
-function newId() {
-  const time = Date.now().toString(36);
-  const random =
-    globalThis.crypto?.randomUUID?.().slice(0, 8) ??
-    Math.random().toString(36).slice(2, 10);
-  return `${time}-${random}`;
-}
-
-/**
- * Normaliza un registro cualquiera al formato del informe.
- *
- * @param {unknown} raw
- * @returns {Record<string, string>|null} null si no hay nada aprovechable.
- */
-function normalizeRecord(raw) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-
-  /** @type {Record<string, string>} */
-  const record = {};
-  for (const name of FIELD_NAMES) {
-    record[name] = sanitizeField(name, /** @type {any} */ (raw)[name]);
+function purgeStoredReports() {
+  let found = 0;
+  for (const key of OBSOLETE_KEYS) {
+    try {
+      if (backend.store.getItem(key) !== null) {
+        backend.store.removeItem(key);
+        found += 1;
+      }
+    } catch {
+      // Un almacenamiento que no deja ni leer tampoco tiene nada que purgar.
+    }
   }
-
-  // Un informe sin paciente ni contenido no es recuperable: se descarta.
-  if (!record.paciente && !record.contenido) return null;
-
-  record.id = sanitizeText(/** @type {any} */ (raw).id, { maxLength: 64 }) || newId();
-  record.created_at = isoOrNow(/** @type {any} */ (raw).created_at);
-  record.updated_at = isoOrNow(/** @type {any} */ (raw).updated_at ?? record.created_at);
-
-  return record;
+  return found;
 }
 
-/**
- * @param {unknown} value
- * @returns {string} Marca temporal ISO válida, o la de ahora.
- */
-function isoOrNow(value) {
-  const text = sanitizeText(value, { maxLength: 32 });
-  const time = Date.parse(text);
-  return Number.isNaN(time) ? new Date().toISOString() : new Date(time).toISOString();
-}
-
-/**
- * Lee el archivo completo desde el almacenamiento, tolerando datos corruptos.
- *
- * @returns {Record<string, string>[]} Informes válidos, del más nuevo al más viejo.
- */
-export function listReports() {
-  const reports = readAll();
-  return reports.sort((a, b) => b.created_at.localeCompare(a.created_at));
-}
-
-/**
- * @param {string} id
- * @returns {Record<string, string>|undefined}
- */
-export function getReport(id) {
-  return readAll().find((report) => report.id === id);
-}
-
-/**
- * Guarda un informe nuevo.
- *
- * @param {Record<string, string>} data Datos ya validados.
- * @returns {Record<string, string>} El informe guardado, con id y fechas.
- * @throws {StorageError} Si el almacenamiento está lleno.
- */
-export function saveReport(data) {
-  const now = new Date().toISOString();
-  const record = { ...data, id: newId(), created_at: now, updated_at: now };
-  writeAll([record, ...readAll()]);
-  return record;
-}
-
-/**
- * @param {string} id
- * @returns {boolean} true si había algo que borrar.
- */
-export function deleteReport(id) {
-  const reports = readAll();
-  const remaining = reports.filter((report) => report.id !== id);
-  if (remaining.length === reports.length) return false;
-  writeAll(remaining);
-  return true;
-}
-
-/** Borra todos los informes. */
-export function clearReports() {
-  writeAll([]);
-}
+/** Informes de versiones anteriores que se borraron al abrir la app. */
+export const purgedReportStores = purgeStoredReports();
 
 /* -- Borrador en curso ----------------------------------------------------
    Guarda lo que se está escribiendo para que un cierre accidental de la
@@ -187,7 +86,7 @@ export function clearReports() {
 /** @param {Record<string, string>} data */
 export function saveDraft(data) {
   try {
-    backend.store.setItem(DRAFT_KEY, JSON.stringify({ v: SCHEMA_VERSION, data }));
+    backend.store.setItem(DRAFT_KEY, JSON.stringify({ v: 1, data }));
   } catch {
     // Un borrador que no se puede guardar no debe interrumpir la escritura.
   }
@@ -195,13 +94,19 @@ export function saveDraft(data) {
 
 /** @returns {Record<string, string>|null} */
 export function loadDraft() {
-  const parsed = parseJson(backend.store.getItem(DRAFT_KEY));
+  let parsed;
+  try {
+    parsed = JSON.parse(backend.store.getItem(DRAFT_KEY) ?? 'null');
+  } catch {
+    return null;
+  }
   if (!parsed || typeof parsed !== 'object' || !parsed.data) return null;
 
   /** @type {Record<string, string>} */
   const draft = {};
   let filled = 0;
   for (const name of FIELD_NAMES) {
+    // Lo guardado es tan poco confiable como lo que se tipea: se sanea igual.
     draft[name] = sanitizeField(name, parsed.data[name]);
     if (draft[name]) filled += 1;
   }
@@ -211,186 +116,9 @@ export function loadDraft() {
 
 /** Descarta el borrador en curso. */
 export function clearDraft() {
-  backend.store.removeItem(DRAFT_KEY);
-}
-
-/* -- Copia de respaldo ---------------------------------------------------- */
-
-/**
- * Serializa todos los informes para descargarlos como archivo.
- *
- * @returns {string} JSON con sangría, listo para guardar.
- */
-export function exportReports() {
-  return JSON.stringify(
-    {
-      app: 'eudai-informes',
-      version: SCHEMA_VERSION,
-      exported_at: new Date().toISOString(),
-      reports: readAll(),
-    },
-    null,
-    2,
-  );
-}
-
-/**
- * Importa una copia de respaldo y la fusiona con lo que ya hay.
- * Los informes cuyo id ya existe se omiten, así reimportar el mismo archivo
- * dos veces no duplica nada.
- *
- * @param {string} json Contenido del archivo.
- * @returns {{ imported: number, skipped: number }}
- * @throws {StorageError} Si el archivo no tiene el formato esperado.
- */
-export function importReports(json) {
-  const parsed = parseJson(json);
-  if (!parsed || typeof parsed !== 'object') {
-    throw new StorageError('format', 'El archivo no es un JSON válido.');
-  }
-
-  const incoming = Array.isArray(parsed) ? parsed : parsed.reports;
-  if (!Array.isArray(incoming)) {
-    throw new StorageError('format', 'El archivo no contiene una lista de informes.');
-  }
-
-  if (incoming.length > MAX_IMPORT) {
-    throw new StorageError(
-      'format',
-      `El archivo trae más de ${MAX_IMPORT} informes: revisá que sea una copia de esta app.`,
-    );
-  }
-
-  const existing = readAll();
-  const knownIds = new Set(existing.map((report) => report.id));
-  const added = [];
-  let skipped = 0;
-
-  for (const candidate of incoming) {
-    const record = normalizeRecord(candidate);
-    if (!record || knownIds.has(record.id)) {
-      skipped += 1;
-      continue;
-    }
-    knownIds.add(record.id);
-    added.push(record);
-  }
-
-  if (added.length > 0) writeAll([...added, ...existing]);
-  return { imported: added.length, skipped };
-}
-
-/* -- Internos ------------------------------------------------------------- */
-
-/**
- * @param {string|null} text
- * @returns {any}
- */
-function parseJson(text) {
-  if (!text) return null;
   try {
-    return JSON.parse(text);
+    backend.store.removeItem(DRAFT_KEY);
   } catch {
-    return null;
-  }
-}
-
-/**
- * Lee y normaliza el archivo, migrando el formato anterior si hace falta.
- *
- * @returns {Record<string, string>[]}
- */
-function readAll() {
-  const parsed = parseJson(backend.store.getItem(STORAGE_KEY));
-
-  const reports =
-    parsed && typeof parsed === 'object' && Array.isArray(parsed.reports)
-      ? parsed.reports.map(normalizeRecord).filter(Boolean)
-      : migrateLegacy();
-
-  return dropExpired(reports);
-}
-
-/**
- * ¿Este informe ya pasó su tiempo de conservación?
- *
- * @param {Record<string, string>} report
- * @param {number} now
- * @returns {boolean}
- */
-function isExpired(report, now) {
-  const created = Date.parse(report.created_at);
-  // Sin una fecha usable no se borra nada: ante la duda, se conserva.
-  if (Number.isNaN(created)) return false;
-  return now - created > RETENTION_DAYS * DAY_MS;
-}
-
-/**
- * Quita los informes vencidos y guarda el resultado.
- *
- * Se hace al leer, que es lo que ocurre cada vez que se abre la app: no hace
- * falta ningún temporizador ni que la pestaña quede abierta.
- *
- * @param {Record<string, string>[]} reports
- * @returns {Record<string, string>[]} Sólo los vigentes.
- */
-function dropExpired(reports) {
-  const now = Date.now();
-  const current = reports.filter((report) => !isExpired(report, now));
-  if (current.length === reports.length) return reports;
-
-  try {
-    writeAll(current);
-  } catch {
-    // Si no se puede escribir, igual se devuelven sólo los vigentes: lo
-    // vencido no se muestra, y la limpieza se reintenta en la próxima lectura.
-  }
-  return current;
-}
-
-/**
- * Migra los informes guardados por la versión anterior bajo la clave `reports`
- * (un array plano, sin versión). Se conserva el original hasta que la
- * migración se escribe con éxito.
- *
- * @returns {Record<string, string>[]}
- */
-function migrateLegacy() {
-  const legacy = parseJson(backend.store.getItem(LEGACY_KEY));
-  if (!Array.isArray(legacy) || legacy.length === 0) return [];
-
-  const migrated = legacy.map(normalizeRecord).filter(Boolean);
-  if (migrated.length === 0) return [];
-
-  try {
-    writeAll(migrated);
-    backend.store.removeItem(LEGACY_KEY);
-  } catch {
-    // Si no se puede escribir, se devuelve igual lo migrado en memoria para
-    // que el historial no aparezca vacío; se reintentará la próxima vez.
-  }
-  return migrated;
-}
-
-/**
- * @param {Record<string, string>[]} reports
- * @throws {StorageError}
- */
-function writeAll(reports) {
-  const payload = JSON.stringify({ version: SCHEMA_VERSION, reports });
-  try {
-    backend.store.setItem(STORAGE_KEY, payload);
-  } catch (error) {
-    const isQuota =
-      error instanceof DOMException &&
-      (error.name === 'QuotaExceededError' ||
-        error.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-
-    throw new StorageError(
-      isQuota ? 'quota' : 'unavailable',
-      isQuota
-        ? 'No queda espacio en el navegador. Exportá una copia y borrá informes antiguos.'
-        : 'No se pudo guardar en este navegador.',
-    );
+    // Nada que hacer: en la próxima escritura se sobrescribe.
   }
 }

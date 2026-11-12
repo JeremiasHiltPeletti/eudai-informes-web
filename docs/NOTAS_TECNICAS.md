@@ -17,7 +17,7 @@ js/schema.js           Definición de los campos: única fuente de verdad
 js/sanitize.js         Normalización de texto y fechas
 js/validate.js         Reglas de validación (puras, reutilizables en backend)
 js/format.js           Fechas, nombres, DNI, teléfono, matrícula, edad
-js/store.js            Persistencia, migración, borrador y copias de respaldo
+js/store.js            Borrador del informe en curso
 js/report.js           Armado, paginación e impresión del documento
 js/ui.js               Avisos, diálogos, descargas y utilidades
 js/app.js              Enrutado y orquestación
@@ -121,9 +121,6 @@ diferencia visible.
 
 - **Borrador automático**: lo que se está escribiendo se guarda solo y se
   recupera si se cierra la pestaña.
-- **Búsqueda en el historial**, insensible a acentos y mayúsculas.
-- **Exportar e importar copia de respaldo** en JSON. Reimportar el mismo archivo
-  no duplica nada.
 - **Edad calculada** a partir de la fecha de nacimiento, editable a mano.
 - **Migración transparente** de los informes guardados por la versión anterior
   (la clave `reports` del `localStorage`).
@@ -168,8 +165,8 @@ dejarlo dicho en vez de simularlo:
 - **El formulario se vacía al guardar**, no al volver desde la vista previa.
   Antes, salir por el logo dejaba cargados los datos del paciente anterior, y
   el informe siguiente podía enviarse con el nombre equivocado.
-- **Si falla la vista previa, se va al historial** en lugar de dejar un marco
-  vacío: el informe ya está guardado y desde ahí se descarga igual.
+- **Si falla la vista previa, se vuelve al formulario** con los datos intactos,
+  en lugar de dejar a la vista un marco vacío.
 - **Los topes de fecha se refrescan al entrar al formulario.** Una pestaña
   abierta desde ayer seguía ofreciendo el día de ayer como máximo.
 - **Comentarios de `_headers` fuera de los bloques.** Netlify interpreta toda
@@ -213,8 +210,6 @@ Otros arreglos de la misma pasada:
   si el renderizado fallaba, los datos del paciente anterior quedaban cargados.
 - **El cursor ya no salta al final** al corregir un dígito en medio del DNI.
 - **Dos pestañas abiertas se mantienen sincronizadas** (evento `storage`).
-- **Guardas al importar**: se rechaza un archivo de más de 8 MB o con más de
-  5.000 informes antes de intentar parsearlo y congelar la pestaña.
 - Comprobado el modo de fallo por almacenamiento lleno: avisa con un mensaje
   claro, se queda en el formulario y no pierde lo escrito.
 
@@ -248,48 +243,33 @@ Reportados desde un iPhone, todos con causa concreta en el código:
 
 Ninguna hace falta hoy; quedan anotadas por si el uso las pide:
 
-- **Duplicar un informe** del historial como base de uno nuevo. Para los
-  informes de evolución del mismo paciente ahorraría recargar todos los datos.
 - **Editar un informe ya guardado** (hoy sólo se puede crear y borrar).
 - **Recordar el profesional y la especialidad** entre informes, que en un
   consultorio de un solo profesional se repiten siempre.
 - **Funcionamiento sin conexión** con un service worker, si el wifi del
   consultorio es inestable.
 
-## Conservación de los datos
+## Qué se guarda, y qué no
 
-El archivo real del informe es el PDF que se descarga y se envía. El historial
-es un acceso rápido a lo reciente, y por eso tiene fecha de vencimiento:
-`RETENTION_DAYS` en `js/store.js`, hoy en 90 días.
+La app **no guarda informes**. El archivo es el PDF que se descarga y se envía.
 
-La poda se hace al leer el almacenamiento, que es lo que ocurre cada vez que se
-abre la app: no hace falta ningún temporizador ni que la pestaña quede abierta.
-Un registro cuya fecha de creación no se pueda interpretar nunca se borra: ante
-la duda, se conserva.
+Hubo un historial local y se quitó: vivía en el `localStorage` de cada equipo,
+así que no se compartía entre dispositivos y no podía funcionar como archivo.
+Lo que sí hacía era acumular datos de salud en cada navegador donde se abrió la
+app, sin vencimiento y en texto plano.
 
-La interfaz escribe el número de días leyéndolo de esa constante, así que el
-aviso al usuario no puede contradecir al código.
+Lo único que persiste es el **borrador en curso**, que se sobrescribe a cada
+rato y se borra al descargar el PDF.
 
-## Limitación conocida
+Al cargar `store.js` se borran las claves `eudai.informes.v1` y `reports`, que
+usaban las versiones anteriores. Quitar la pantalla sin borrar los datos sería
+lo peor de los dos mundos: informes de pacientes dormidos en el navegador,
+invisibles y fuera del alcance de quien los cargó.
 
-El historial **no se comparte entre dispositivos**: cada navegador tiene el
-suyo. Un informe hecho en el celular no aparece en la computadora del
-consultorio, y un respaldo exportado contiene sólo los informes de ese equipo.
-Por eso el archivo es el PDF y no el historial.
-
-Los informes viven en el `localStorage` del navegador. Eso es bueno para la
-confidencialidad (los datos de salud no salen del equipo) y malo para la
-continuidad: si se borran los datos del sitio, se cambia de navegador o se
-usa otra computadora, no están. Por eso existe la copia de respaldo, y la app
-lo dice en la pantalla de inicio.
-
-Si en algún momento hacen falta varios dispositivos, historial compartido entre
-profesionales o respaldo automático, el paso siguiente es un backend con
-usuarios. Ahí sí entran en juego el login, **Row Level Security** (cada
-profesional ve sólo sus informes), **CORS** acotado al dominio de la app y
-**rate limiting** por endpoint. La validación ya está lista para ese día:
-`schema.js`, `validate.js` y `sanitize.js` no dependen del navegador y se
-ejecutan igual en el servidor.
+Como el PDF pasó a ser la única copia, salir de la vista previa sin haberlo
+descargado pide confirmación, tanto por el botón de volver como por el logo.
+Descargar es la señal de trabajo terminado: ahí se vacían el formulario y el
+borrador.
 
 ## Compatibilidad
 

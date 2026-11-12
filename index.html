@@ -77,18 +77,6 @@
               </svg>
               Nuevo informe
             </a>
-            <a class="btn btn--secondary" href="#/historial">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path
-                  d="M5 8h14M5 8a2 2 0 1 1 0-4h14a2 2 0 1 1 0 4M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8m-9 4h4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Historial
-              <span class="visually-hidden">de informes</span>
-              <span data-home-count hidden></span>
-            </a>
           </div>
         </div>
 
@@ -101,12 +89,10 @@
             <path d="M12 9v4m0 3h.01" stroke-linecap="round" />
           </svg>
           <span data-privacy-text>
-            <strong>El PDF es el archivo:</strong> descargalo y enviálo apenas lo
-            generes. El historial es sólo un acceso rápido a los informes de
-            <strong>este equipo</strong> —no se comparte con tus otros
-            dispositivos— y se borra solo a los
-            <span data-retention-days>90</span> días. Nada se envía a ningún
-            servidor.
+            <strong>Descargá el PDF antes de salir:</strong> es la única copia
+            del informe. La app no guarda los informes ni los envía a ningún
+            servidor. Mientras escribís sí se guarda un borrador en este
+            navegador, para que no pierdas el trabajo si se cierra la pestaña.
           </span>
         </p>
       </section>
@@ -408,102 +394,6 @@
         </form>
       </section>
 
-      <!-- ===================== Historial ===================== -->
-      <section class="view" id="view-history" aria-labelledby="history-title" hidden>
-        <div class="view__header">
-          <a class="btn-icon" href="#/" aria-label="Volver al inicio">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M10 19l-7-7 7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </a>
-          <h1 class="view__title" id="history-title">Historial</h1>
-        </div>
-
-        <div class="toolbar">
-          <div class="search">
-            <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M20 20l-3.5-3.5" stroke-linecap="round" />
-            </svg>
-            <label class="visually-hidden" for="history-search">Buscar en el historial</label>
-            <input
-              class="control"
-              id="history-search"
-              type="search"
-              placeholder="Buscar por paciente, tipo o especialidad"
-              autocomplete="off"
-              data-history-search
-            />
-          </div>
-
-          <button class="btn btn--secondary" type="button" data-export>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            Exportar copia
-          </button>
-
-          <button class="btn btn--secondary" type="button" data-import>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            Importar
-          </button>
-          <input
-            class="visually-hidden"
-            type="file"
-            accept="application/json,.json"
-            aria-label="Archivo de copia de respaldo"
-            tabindex="-1"
-            data-import-input
-          />
-        </div>
-
-        <p class="field__hint history__scope">
-          Informes de este equipo de los últimos
-          <span data-retention-days>90</span> días. Los más viejos se borran
-          solos; el archivo definitivo es el PDF que descargaste.
-        </p>
-
-        <div class="card">
-          <ul class="history" data-history-list aria-describedby="history-status"></ul>
-        </div>
-        <p class="visually-hidden" id="history-status" role="status" data-history-status></p>
-
-        <template data-history-item>
-          <li class="history__item">
-            <div class="history__main">
-              <p class="history__name" data-name></p>
-              <ul class="history__meta">
-                <li class="history__type" data-type></li>
-                <li data-specialty></li>
-                <li data-date></li>
-              </ul>
-            </div>
-            <div class="history__actions">
-              <button class="btn btn--secondary" type="button" data-action="print">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                PDF
-              </button>
-              <button class="btn-icon btn-icon--danger" type="button" data-action="delete">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M19 7l-.9 12.1A2 2 0 0 1 16.1 21H7.9a2 2 0 0 1-2-1.9L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </button>
-            </div>
-          </li>
-        </template>
-
-        <template data-history-empty>
-          <li class="empty">
-            <p class="empty__title" data-empty-title></p>
-            <p data-empty-body></p>
-          </li>
-        </template>
-      </section>
-
       <!-- ===================== Vista previa ===================== -->
       <section class="view" id="view-preview" aria-labelledby="preview-title" hidden>
         <div class="view__header">
@@ -554,7 +444,5 @@
       <span data-toast-message></span>
     </div>
 
-    <!-- Marco fuera de pantalla para imprimir desde el historial. -->
-    <iframe class="print-frame" title="Documento para impresión" aria-hidden="true" tabindex="-1" data-print-frame></iframe>
   </body>
 </html>
