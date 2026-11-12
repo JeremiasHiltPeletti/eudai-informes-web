@@ -109,10 +109,11 @@ function renderRoute() {
     refreshDateLimits();
   }
 
-  // Al navegar se empieza arriba. En la carga inicial (una recarga, sobre
-  // todo) se vuelve a donde estaba: el navegador lo haría solo, pero después
-  // del primer pintado, y en el celular se veía la página saltar.
-  globalThis.scrollTo({ top: isFirstRender ? takeSavedScroll(hash) : 0, behavior: 'instant' });
+  // Al navegar se empieza arriba. En la carga inicial no se toca el scroll:
+  // la posición la repone el navegador (en una recarga, la que tenía). Mover
+  // el scroll por código mientras la página carga dejaba, en Chrome para iOS,
+  // la cabecera tapada por la barra del navegador.
+  if (!isFirstRender) globalThis.scrollTo({ top: 0, behavior: 'instant' });
 
   // Sin recarga de página el lector de pantalla no anuncia nada por su cuenta:
   // se mueve el foco al título de la vista para que lea dónde quedó. En la
@@ -121,38 +122,6 @@ function renderRoute() {
   if (heading && !isFirstRender) {
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });
-  }
-}
-
-/* -- Posición al recargar ---------------------------------------------------- */
-
-const SCROLL_KEY = 'eudai.scroll';
-
-/** Guarda en qué vista y a qué altura estaba la página, para la recarga. */
-function saveScroll() {
-  try {
-    globalThis.sessionStorage.setItem(
-      SCROLL_KEY,
-      JSON.stringify({ hash: globalThis.location.hash, y: Math.round(globalThis.scrollY) }),
-    );
-  } catch {
-    // Sin almacenamiento, la recarga empieza arriba y listo.
-  }
-}
-
-/**
- * Devuelve (y descarta) la altura guardada si es de esta misma vista.
- * @param {string} hash
- */
-function takeSavedScroll(hash) {
-  try {
-    const saved = JSON.parse(globalThis.sessionStorage.getItem(SCROLL_KEY) ?? 'null');
-    globalThis.sessionStorage.removeItem(SCROLL_KEY);
-    // Sólo en una recarga: al entrar al sitio se empieza siempre arriba.
-    if (!isReload()) return 0;
-    return saved?.hash === hash && Number.isFinite(saved.y) ? Math.max(0, saved.y) : 0;
-  } catch {
-    return 0;
   }
 }
 
@@ -182,10 +151,29 @@ function differsFromBlank(draft) {
   });
 }
 
-/** Si esta carga de la página es una recarga. */
-function isReload() {
-  const [navigation] = globalThis.performance?.getEntriesByType?.('navigation') ?? [];
-  return navigation?.type === 'reload';
+/** Marca, por pestaña, de que el borrador ya se mostró en ella. */
+const SEEN_KEY = 'eudai.borrador.visto';
+
+/**
+ * Si esta pestaña ya tenía el borrador a la vista: una recarga, o volver al
+ * formulario en la misma pestaña. (No se usa el tipo de navegación de
+ * `performance`: el «Volver a cargar» del menú de Chrome en iOS no siempre
+ * se informa como recarga.)
+ */
+function draftAlreadySeen() {
+  try {
+    return globalThis.sessionStorage.getItem(SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markDraftSeen() {
+  try {
+    globalThis.sessionStorage.setItem(SEEN_KEY, '1');
+  } catch {
+    // Sin almacenamiento de sesión, el aviso se repite: no es grave.
+  }
 }
 
 function prepareForm() {
@@ -200,7 +188,7 @@ function prepareForm() {
     ageEditedByHand = Boolean(draft.edad);
     // Al recargar, lo cargado vuelve a estar donde estaba: no hace falta
     // avisarlo (y el aviso, al aparecer, se sentía como algo moviéndose).
-    if (!isReload()) notify('Recuperamos el borrador que habías empezado.');
+    if (!draftAlreadySeen()) notify('Recuperamos el borrador que habías empezado.');
   } else {
     // `restore.js` pudo haber copiado un borrador sin nada propio (sólo la
     // fecha de otro día, por ejemplo): se vuelve a un formulario en blanco.
@@ -208,6 +196,7 @@ function prepareForm() {
   }
 
   if (!form.elements.fecha.value) form.elements.fecha.value = todayISO();
+  markDraftSeen();
   updateCharCount();
 }
 
@@ -499,10 +488,7 @@ form.addEventListener('change', (event) => {
 
 // Lo último que se escribió no espera al autoguardado si la página se recarga,
 // se cierra o pasa a segundo plano (en el celular, cambiar de app).
-globalThis.addEventListener('pagehide', () => {
-  saveDraftSoon.flush();
-  saveScroll();
-});
+globalThis.addEventListener('pagehide', () => saveDraftSoon.flush());
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveDraftSoon.flush();
 });

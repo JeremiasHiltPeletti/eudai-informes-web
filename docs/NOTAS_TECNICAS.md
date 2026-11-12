@@ -395,6 +395,25 @@ volvió a `sticky`, dentro del flujo: ocupa su lugar arriba del todo —al entra
 al sitio está siempre a la vista— y se queda pegada al borde al scrollear.
 `scroll-padding-block-start` sigue evitando que tape lo que se enfoca.
 
+### La cabecera tapada por la barra de Chrome
+
+Aun así, un segundo video mostró la cabecera oculta detrás de la barra de
+Chrome al entrar al sitio y al recargar, con la página ya en el tope (arrastrar
+hacia abajo disparaba el «tirar para recargar» en vez de mostrarla). Chrome en
+iOS dibuja su barra sobre la página y la compensa con un margen interno; si la
+página mueve el scroll por código mientras carga, ese margen queda mal y el
+contenido arranca debajo de la barra. La app lo hacía dos veces: en el primer
+`renderRoute` (`scrollTo(0)`) y en `restore.js` (reponer la altura guardada).
+
+Ahora, en la carga inicial, nadie toca el scroll: `scrollRestoration` vuelve a
+`auto` y el navegador repone él solo la altura en una recarga. Como
+`restore.js` completa el formulario antes del primer pintado, el documento ya
+tiene su alto definitivo y esa reposición no salta. `scrollTo(0)` queda sólo
+para navegar entre vistas. El aviso de borrador recuperado se suprime con una
+marca en `sessionStorage` (ya se mostró en esta pestaña) y no con el tipo de
+navegación: el «Volver a cargar» del menú de Chrome en iOS no siempre se
+informa como `reload`.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

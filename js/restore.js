@@ -3,18 +3,16 @@
    sin esperar a `app.js`, que es un módulo y llega (con sus dependencias) un
    rato después. En el celular esa espera se veía como la página en blanco y
    los campos llenándose después.
-   Acá sólo se copian los valores guardados y se vuelve a la altura en la que
-   estaba la página; `app.js` después los sanea y valida como siempre.
+   Acá sólo se copian los valores guardados; `app.js` después los sanea y
+   valida como siempre. Como el formulario ya tiene su alto definitivo antes
+   del primer pintado, el navegador repone por su cuenta la altura en la que
+   estaba la página al recargar, sin ningún salto. (Moverla por código acá
+   dejaba, en Chrome para iOS, la cabecera tapada por la barra del navegador.)
    Asignar `.value` no interpreta HTML: un valor guardado no puede inyectar
    nada. */
 (() => {
   const root = document.documentElement;
   if (root.dataset.boot !== 'form') return;
-
-  // La altura se repone sólo en una recarga. Al entrar al sitio (un enlace, la
-  // pestaña reabierta) se empieza arriba, con la cabecera a la vista.
-  const [navigation] = globalThis.performance?.getEntriesByType?.('navigation') ?? [];
-  const isReload = navigation?.type === 'reload';
 
   try {
     const form = document.getElementById('report-form');
@@ -30,17 +28,6 @@
     }
   } catch {
     // Sin almacenamiento o con un borrador ilegible: `app.js` decide.
-  }
-
-  try {
-    const scroll = JSON.parse(globalThis.sessionStorage.getItem('eudai.scroll') ?? 'null');
-    if (isReload && scroll && scroll.hash === '#/nuevo' && Number.isFinite(scroll.y)) {
-      // `instant`: el CSS pide desplazamiento suave, y acá se vería la página
-      // deslizarse desde arriba.
-      globalThis.scrollTo({ top: Math.max(0, scroll.y), behavior: 'instant' });
-    }
-  } catch {
-    // La recarga empieza arriba.
   }
 
   root.dataset.boot = 'form-ready';
