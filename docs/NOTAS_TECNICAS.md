@@ -300,11 +300,9 @@ ya daba 0):
   clásico de pocas líneas, anota la ruta en `<html>` antes de pintar y el CSS
   muestra la vista correcta desde el primer cuadro.
 
-La cabecera pasó de `sticky` a `fixed`: en iOS una barra `sticky` se despega
-del borde mientras la barra del navegador se esconde o reaparece, y quedaba un
-hueco entre ella y el notch. Su lugar lo repone un `padding` en `<body>`
-(`--header-offset`, que suma `env(safe-area-inset-top)`), y
-`scroll-padding-block-start` evita que tape lo que se enfoca.
+La cabecera pasó un tiempo de `sticky` a `fixed` con un relleno de
+`env(safe-area-inset-top)`, para pegarla al notch. Fue un error: ver «Cabecera,
+barra del navegador y notch», más abajo.
 
 ## Recargar sin perder lo cargado
 
@@ -368,11 +366,10 @@ avisarlo.
   pestaña. Ahora se repone sólo en una recarga (tipo de navegación `reload`);
   al entrar por un enlace, desde el historial o con la pestaña reabierta se
   empieza arriba.
-- **Rebote y «tirar para recargar».** Volvió `overscroll-behavior-y: none` en
-  `<html>`: el rebote al llegar arriba devolvía la página hacia arriba (se veía
-  todo moverse) y el gesto recargaba sin querer. También se quitó
-  `scroll-behavior: smooth`, para que ningún desplazamiento hecho por código se
-  vea deslizar.
+- **Desplazamiento suave.** Se quitó `scroll-behavior: smooth`, para que
+  ningún desplazamiento hecho por código se vea deslizar. (Se probó también
+  bloquear el rebote con `overscroll-behavior-y: none`, pero eso desactiva el
+  gesto de «tirar para recargar», que sí se usa; quedó fuera.)
 - **El teclado tapaba lo que se escribía.** iOS no acompaña al cursor cuando el
   área de texto crece mientras se escribe, y a veces deja el campo justo debajo
   del teclado. `js/keyboard.js` mide el área visible (`visualViewport`) y, si el
@@ -381,6 +378,22 @@ avisarlo.
   Con el teclado abierto agrega al final de la página un espacio del alto del
   teclado (`--keyboard-inset`), para que hasta el último campo pueda subir.
   Sin teclado en pantalla no hace nada.
+
+## Cabecera, barra del navegador y notch
+
+En Chrome para iPhone, al scrollear la barra del navegador se esconde y, al
+volver, la cabecera quedaba separada del notch por un hueco, a veces sí y a
+veces no; al recargar, toda la página saltaba. La causa era la cabecera `fixed`
+con `padding-block-start: env(safe-area-inset-top)` y `viewport-fit=cover`: con
+la barra del navegador a la vista ese valor es 0 y, cuando la barra se esconde,
+pasa a unos 50 px. La cabecera y el relleno de `<body>` (que lo sumaba) cambiaban
+de alto en ese momento, y el contenido se corría por debajo.
+
+Ahora no hay nada que dependa del área segura: se quitó `viewport-fit=cover`
+(el navegador reserva él solo la zona del notch y de su barra) y la cabecera
+volvió a `sticky`, dentro del flujo: ocupa su lugar arriba del todo —al entrar
+al sitio está siempre a la vista— y se queda pegada al borde al scrollear.
+`scroll-padding-block-start` sigue evitando que tape lo que se enfoca.
 
 ## Vista previa de impresión lenta en Chrome para Windows
 

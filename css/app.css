@@ -149,7 +149,6 @@
   --brand-logo-height: clamp(3.5rem, 2.9rem + 2.6vw, 4.5rem);
   /* Alto de la cabecera: el logo, su área de toque y el aire de la barra. */
   --header-block: calc(var(--brand-logo-height) + 2rem);
-  --header-offset: calc(var(--header-block) + 1px + env(safe-area-inset-top, 0px));
   --z-header: 10;
   --z-toast: 60;
 }
@@ -186,12 +185,8 @@
 
 html {
   /* Lo que se enfoca o se busca por ancla no queda tapado por la cabecera. */
-  scroll-padding-block-start: calc(var(--header-offset) + var(--space-3));
+  scroll-padding-block-start: calc(var(--header-block) + 1px + var(--space-3));
   -webkit-text-size-adjust: 100%;
-
-  /* Sin rebote elástico ni «arrastrar para recargar»: al soltar, el rebote
-     devolvía la página hacia arriba y en el celular se veía todo moverse. */
-  overscroll-behavior-y: none;
 
   /* El color va también en la raíz: el área que asoma al sobre-scrollear, o
      cuando el navegador móvil esconde su barra, la pinta el lienzo, y sin un
@@ -201,8 +196,6 @@ html {
 
 body {
   min-block-size: 100svh;
-  /* Lugar de la cabecera fija. */
-  padding-block-start: var(--header-offset);
   font-family: var(--font-sans);
   font-size: var(--step-0);
   line-height: var(--leading-normal);
@@ -331,18 +324,16 @@ summary:focus-visible,
    de los dos problemas, no cuesta nada de composición y sobre una barra con
    el logo el efecto no aportaba nada. */
 .site-header {
-  /* `fixed` y no `sticky`: en iOS una barra `sticky` se despega del borde
-     mientras la barra del navegador se esconde o reaparece, y el contenido se
-     ve pasar por el hueco entre la cabecera y el notch. Una barra fija queda
-     anclada al borde, y Safari además extiende su color a la zona de la hora.
-     El lugar que deja de ocupar lo repone el `padding` de <body>. */
-  position: fixed;
+  /* `sticky`, dentro del flujo de la página: ocupa su lugar arriba del todo y
+     se queda pegada al borde al scrollear. Se probó `fixed` con un relleno de
+     `env(safe-area-inset-top)`, y era peor: en Chrome para iOS ese valor
+     cambia cada vez que la barra del navegador se esconde o reaparece, y la
+     cabecera y el relleno de <body> cambiaban de alto a la vez: la página
+     saltaba, y entre la cabecera y el notch quedaba un hueco. */
+  position: sticky;
   inset-block-start: 0;
-  inset-inline: 0;
   z-index: var(--z-header);
-  box-sizing: content-box;
   block-size: var(--header-block);
-  padding-block-start: env(safe-area-inset-top, 0px);
   background: var(--surface-page);
   border-block-end: 1px solid var(--line);
 }

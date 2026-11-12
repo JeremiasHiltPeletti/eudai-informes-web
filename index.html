@@ -2,7 +2,11 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Sin `viewport-fit=cover`: el navegador reserva solo la zona del notch
+         y de su barra, y la página nunca depende de `env(safe-area-inset-*)`,
+         que en Chrome para iOS cambia de valor cada vez que la barra se esconde
+         o reaparece. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Eudai · Sistema de Informes</title>
     <meta
       name="description"
