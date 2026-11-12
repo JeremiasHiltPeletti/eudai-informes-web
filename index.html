@@ -29,6 +29,9 @@
       crossorigin
     />
     <link rel="stylesheet" href="css/app.css" />
+    <!-- La hoja del informe se aplica a esta página sólo al imprimir: el
+         informe se imprime desde el documento principal, no desde un iframe. -->
+    <link rel="stylesheet" href="css/report.css" media="print" />
 
     <script type="module" src="js/app.js"></script>
   </head>
@@ -444,5 +447,11 @@
       <span data-toast-message></span>
     </div>
 
+    <!-- Copia del informe que se manda a imprimir. En pantalla no se ve. -->
+    <div class="print-root" data-print-root aria-hidden="true">
+      <p class="print-root__empty">
+        Para imprimir el informe, abrí la vista previa y usá el botón «Descargar PDF».
+      </p>
+    </div>
   </body>
 </html>

@@ -470,7 +470,7 @@ body {
   inline-size: 186.4mm;
 }
 
-.card {
+.rcard {
   background: var(--card-bg);
   border: 0.2mm solid var(--card-border);
   border-radius: 3mm;
@@ -478,14 +478,14 @@ body {
 
 /* Las fichas fluyen (grid), no van posicionadas a mano: así entran los
    campos opcionales sin recalcular coordenadas una por una. */
-.card--patient {
+.rcard--patient {
   flex: none;
   inline-size: 113.9mm;
   min-block-size: 133.8mm;
   padding: 8.4mm 5.2mm;
 }
 
-.card--professional {
+.rcard--professional {
   flex: none;
   inline-size: 65.8mm;
   min-block-size: 95.4mm;
@@ -574,29 +574,29 @@ body {
 }
 
 /* Ficha del profesional: sin íconos por campo, con su propio encabezado */
-.card--professional .field-list {
+.rcard--professional .field-list {
   gap: 7.5mm;
   margin-block-start: 8.4mm;
 }
 
-.card__heading {
+.rcard__heading {
   display: flex;
   gap: 3.5mm;
   align-items: flex-start;
 }
 
-.card__heading-icon {
+.rcard__heading-icon {
   flex: none;
   inline-size: 12mm;
   block-size: 12mm;
 }
 
-.card__heading-icon svg {
+.rcard__heading-icon svg {
   inline-size: 100%;
   block-size: 100%;
 }
 
-.card__heading-title {
+.rcard__heading-title {
   padding-block-start: 1.9mm;
   font-size: 5.4mm;
   font-weight: 700;
@@ -605,7 +605,7 @@ body {
   letter-spacing: 0.2mm;
 }
 
-.card__heading-title::after {
+.rcard__heading-title::after {
   content: "";
   display: block;
   inline-size: 15mm;
@@ -614,12 +614,12 @@ body {
   background: var(--icon-stroke);
 }
 
-.card--professional .data-field {
+.rcard--professional .data-field {
   display: block;
   block-size: auto;
 }
 
-.card--professional .data-field__label {
+.rcard--professional .data-field__label {
   margin-block-end: 2mm;
 }
 
@@ -710,7 +710,7 @@ body {
 
 .cover-field__icon svg,
 .data-field__icon svg,
-.card__heading-icon svg {
+.rcard__heading-icon svg {
   color: var(--icon-stroke);
 }
 

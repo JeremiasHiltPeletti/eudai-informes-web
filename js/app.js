@@ -9,7 +9,7 @@
 import { FIELD_NAMES } from './schema.js';
 import { validateReport, validateField } from './validate.js';
 import * as store from './store.js';
-import { renderReport, printReport } from './report.js';
+import { renderReport, mountForPrint } from './report.js';
 import { notify, confirmAction, onNextFrame, debounce } from './ui.js';
 import {
   todayISO,
@@ -32,6 +32,7 @@ const previewStage = document.querySelector('[data-preview-stage]');
 const previewFrame = /** @type {HTMLIFrameElement} */ (document.querySelector('[data-preview-frame]'));
 const previewStatus = document.querySelector('[data-preview-status]');
 const printButton = document.querySelector('[data-print]');
+const printRoot = document.querySelector('[data-print-root]');
 
 /* -- Estado ---------------------------------------------------------------- */
 
@@ -317,6 +318,11 @@ async function showPreview(data) {
     previewMetrics = await renderReport(previewFrame, data);
     scalePreview();
 
+    // La copia para imprimir se prepara ahora y no al apretar el botón: así
+    // `window.print()` se llama dentro del mismo gesto del usuario, que es lo
+    // que Safari exige para abrir el diálogo sin trabas.
+    await mountForPrint(previewFrame, printRoot);
+
     const { pages } = previewMetrics;
     if (previewStatus) {
       previewStatus.textContent = `${pages} ${pages === 1 ? 'página' : 'páginas'} · A4`;
@@ -355,7 +361,7 @@ function scalePreview() {
  */
 function print() {
   try {
-    printReport(previewFrame);
+    globalThis.print();
     downloaded = true;
     resetForm();
   } catch (error) {

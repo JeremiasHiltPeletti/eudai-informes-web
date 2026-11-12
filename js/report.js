@@ -110,18 +110,42 @@ export async function renderReport(frame, data) {
 }
 
 /**
- * Abre el diálogo de impresión del navegador con el documento del iframe.
- * Se imprime el marco, no la app: no hay ventana emergente que bloquear ni
- * `document.write`, y lo que se ve en la vista previa es exactamente lo que
- * sale por la impresora o el "Guardar como PDF".
+ * Copia el informe ya paginado del iframe al documento principal, listo para
+ * imprimir con `window.print()`.
  *
- * @param {HTMLIFrameElement} frame
+ * No se imprime el iframe porque Safari en iOS no lo permite: `print()` sobre
+ * la ventana de un iframe imprime la página contenedora. Copiando las hojas
+ * al documento principal, el mismo camino funciona en todos los navegadores.
+ * Se copia lo ya paginado (no se vuelve a medir), así que lo impreso es
+ * exactamente lo que muestra la vista previa.
+ *
+ * @param {HTMLIFrameElement} frame Marco con el informe renderizado.
+ * @param {HTMLElement} root Contenedor de impresión del documento principal.
+ * @returns {Promise<void>} Se resuelve con tipografías e imágenes listas.
  */
-export function printReport(frame) {
-  const view = frame.contentWindow;
-  if (!view) throw new Error('El informe todavía no está listo para imprimir.');
-  view.focus();
-  view.print();
+export async function mountForPrint(frame, root) {
+  const source = frame.contentDocument;
+  if (!source) throw new Error('El informe todavía no está listo para imprimir.');
+
+  const target = root.ownerDocument;
+  const nodes = [...source.querySelectorAll('.sprite, .page')].map((node) =>
+    target.importNode(node, true),
+  );
+  root.replaceChildren(...nodes);
+
+  // El contenedor está oculto en pantalla, así que nada dispara la carga de
+  // las tipografías: se piden a mano para que estén al abrir el diálogo.
+  await Promise.all(FONT_PROBES.map((probe) => target.fonts.load(probe, FONT_SAMPLE).catch(() => {})));
+  await Promise.all(
+    [...root.querySelectorAll('img')].map((image) =>
+      image.complete
+        ? null
+        : new Promise((resolve) => {
+            image.addEventListener('load', resolve, { once: true });
+            image.addEventListener('error', resolve, { once: true });
+          }),
+    ),
+  );
 }
 
 /* -- Internos ------------------------------------------------------------- */

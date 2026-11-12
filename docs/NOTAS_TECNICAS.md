@@ -57,7 +57,7 @@ los dos casos.
 | **Corrupción silenciosa** | `String.replace` interpreta `$&`, `$1`… en el reemplazo: un dato con `$&` se duplicaba solo. | No hay sustitución de cadenas. |
 | **Fechas corridas un día** | `new Date('2024-01-15')` se interpreta como medianoche UTC; al oeste de Greenwich imprimía 14/01. | Las fechas se formatean partiendo la cadena ISO, sin construir un `Date`. |
 | **Campos que se pedían y no se imprimían** | «Tipo de informe» y «Diagnóstico médico» se cargaban pero nunca aparecían en el PDF. | El tipo va como subtítulo de la portada y el diagnóstico es un campo más de la ficha del paciente. |
-| **Ventana emergente para imprimir** | `window.open` + `document.write` + un `<script>` inyectado: lo bloquea cualquier bloqueador de pop-ups e incumple la CSP. | Se imprime el iframe directamente (`frame.contentWindow.print()`). Sin ventanas nuevas ni scripts inyectados. |
+| **Ventana emergente para imprimir** | `window.open` + `document.write` + un `<script>` inyectado: lo bloquea cualquier bloqueador de pop-ups e incumple la CSP. | El informe ya paginado se copia al documento principal y se imprime con `window.print()`. Sin ventanas nuevas ni scripts inyectados. |
 | **Alto fijo cableado** | La vista previa asumía `3449px` de alto, siempre. | El alto y el número de páginas se miden sobre el documento real. |
 | **IDs que podían chocar** | `Date.now()` como identificador: dos informes en el mismo milisegundo compartían id. | Prefijo temporal ordenable + sufijo aleatorio. |
 | **Decoración sobre el texto** | La hoja decorativa se dibujaba encima de las conclusiones. | Pasó a ser marca de agua detrás del cuerpo. |
@@ -248,6 +248,24 @@ Ninguna hace falta hoy; quedan anotadas por si el uso las pide:
   consultorio de un solo profesional se repiten siempre.
 - **Funcionamiento sin conexión** con un service worker, si el wifi del
   consultorio es inestable.
+
+## Impresión en Safari de iOS
+
+La primera versión imprimía el iframe de la vista previa con
+`frame.contentWindow.print()`. Funciona en Chrome, Edge y Firefox, pero Safari
+en iOS ignora el marco e imprime la página contenedora: en el iPhone salía una
+hoja con el aviso de respaldo en lugar del informe.
+
+Ahora las hojas ya paginadas se copian a `.print-root`, en el documento
+principal, y se llama a `window.print()`. `report.css` se carga ahí con
+`media="print"`, de modo que sus reglas sólo rigen al imprimir y no tocan la
+interfaz. La copia se prepara al terminar la vista previa y no al apretar el
+botón, para que `print()` ocurra dentro del gesto del usuario. Como se copia lo
+ya paginado, lo impreso es exactamente lo que muestra la vista previa.
+
+La clase `.card` del documento pasó a `.rcard`: era el único nombre que
+coincidía con uno de la interfaz, y al convivir las dos hojas la tarjeta del
+informe heredaba la sombra de la tarjeta del formulario.
 
 ## Qué se guarda, y qué no
 
