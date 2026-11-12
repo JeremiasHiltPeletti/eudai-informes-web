@@ -1043,3 +1043,8 @@ select.control {
     font-size: 12pt;
   }
 }
+
+/* Alcance del historial: aclara, donde se lo usa, que es temporal y por equipo. */
+.history__scope {
+  margin-block-end: var(--space-3);
+}

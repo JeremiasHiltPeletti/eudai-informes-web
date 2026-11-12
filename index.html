@@ -101,9 +101,12 @@
             <path d="M12 9v4m0 3h.01" stroke-linecap="round" />
           </svg>
           <span data-privacy-text>
-            Los informes se guardan sólo en este navegador y no se envían a ningún
-            servidor. Si borrás los datos del sitio o cambiás de equipo, se pierden:
-            descargá una copia desde el historial cada tanto.
+            <strong>El PDF es el archivo:</strong> descargalo y enviálo apenas lo
+            generes. El historial es sólo un acceso rápido a los informes de
+            <strong>este equipo</strong> —no se comparte con tus otros
+            dispositivos— y se borra solo a los
+            <span data-retention-days>90</span> días. Nada se envía a ningún
+            servidor.
           </span>
         </p>
       </section>
@@ -455,6 +458,12 @@
             data-import-input
           />
         </div>
+
+        <p class="field__hint history__scope">
+          Informes de este equipo de los últimos
+          <span data-retention-days>90</span> días. Los más viejos se borran
+          solos; el archivo definitivo es el PDF que descargaste.
+        </p>
 
         <div class="card">
           <ul class="history" data-history-list aria-describedby="history-status"></ul>

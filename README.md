@@ -54,7 +54,13 @@ Abrí `http://localhost:8000/`. Los módulos y la plantilla necesitan servirse p
 
 ## Alcance de esta versión
 
-Los informes y borradores se guardan en `localStorage` del navegador. La aplicación no tiene backend ni envía informes a un servidor. Si se borran los datos del sitio o se cambia de dispositivo, los trabajos se pierden salvo que se haya exportado un respaldo. Para manejar información sensible, es necesario usar un dispositivo y perfil de navegador adecuados.
+**El archivo del informe es el PDF**: se genera, se descarga y se envía. El historial del navegador es sólo un acceso rápido a lo reciente, no el archivo.
+
+Esa distinción importa porque el historial vive en el `localStorage` de cada navegador: **no se comparte entre dispositivos**. Un informe hecho en el celular no aparece en la computadora del consultorio, y un respaldo exportado contiene únicamente los informes de ese equipo.
+
+Para que no queden datos de salud acumulándose indefinidamente en cada dispositivo donde se abrió la aplicación, **los informes del historial se borran solos a los 90 días**. El plazo se define en `RETENTION_DAYS` (`js/store.js`) y la interfaz lo muestra leyéndolo de esa misma constante, de modo que el aviso al usuario no puede quedar desfasado del comportamiento.
+
+La aplicación no tiene backend ni envía informes a ningún servidor, así que no existe una base de datos que pueda filtrarse. El control de acceso efectivo es el bloqueo del dispositivo: quien abre el navegador ve el historial de ese equipo.
 
 ## Decisiones técnicas
 

@@ -628,11 +628,19 @@ if (previewStage && 'ResizeObserver' in globalThis) {
 
 /* -- Arranque -------------------------------------------------------------- */
 
+// El plazo de conservación se escribe desde la constante de `store.js`, para
+// que el aviso al usuario nunca contradiga lo que hace el código.
+for (const slot of document.querySelectorAll('[data-retention-days]')) {
+  slot.textContent = String(store.RETENTION_DAYS);
+}
+
 if (!store.isPersistent()) {
   const text = document.querySelector('[data-privacy-text]');
   if (text) {
     text.textContent =
       'Este navegador tiene el almacenamiento bloqueado: los informes van a existir sólo mientras la pestaña esté abierta. Descargá el PDF antes de cerrarla.';
+    const scope = document.querySelector('.history__scope');
+    if (scope) scope.textContent = 'Los informes de esta sesión se pierden al cerrar la pestaña.';
   }
 }
 

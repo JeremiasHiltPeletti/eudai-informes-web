@@ -256,7 +256,26 @@ Ninguna hace falta hoy; quedan anotadas por si el uso las pide:
 - **Funcionamiento sin conexión** con un service worker, si el wifi del
   consultorio es inestable.
 
+## Conservación de los datos
+
+El archivo real del informe es el PDF que se descarga y se envía. El historial
+es un acceso rápido a lo reciente, y por eso tiene fecha de vencimiento:
+`RETENTION_DAYS` en `js/store.js`, hoy en 90 días.
+
+La poda se hace al leer el almacenamiento, que es lo que ocurre cada vez que se
+abre la app: no hace falta ningún temporizador ni que la pestaña quede abierta.
+Un registro cuya fecha de creación no se pueda interpretar nunca se borra: ante
+la duda, se conserva.
+
+La interfaz escribe el número de días leyéndolo de esa constante, así que el
+aviso al usuario no puede contradecir al código.
+
 ## Limitación conocida
+
+El historial **no se comparte entre dispositivos**: cada navegador tiene el
+suyo. Un informe hecho en el celular no aparece en la computadora del
+consultorio, y un respaldo exportado contiene sólo los informes de ese equipo.
+Por eso el archivo es el PDF y no el historial.
 
 Los informes viven en el `localStorage` del navegador. Eso es bueno para la
 confidencialidad (los datos de salud no salen del equipo) y malo para la

@@ -23,6 +23,21 @@ const SCHEMA_VERSION = 1;
 /** Tope de informes por importación, para no colgar la pestaña con un archivo ajeno. */
 const MAX_IMPORT = 5000;
 
+/**
+ * Días que un informe se conserva en este navegador antes de borrarse solo.
+ *
+ * El archivo real del informe es el PDF que se descarga y se envía; esto es
+ * nada más un acceso rápido a lo reciente. Sin un vencimiento, datos de salud
+ * quedarían acumulándose para siempre en cada equipo donde se abrió la app
+ * —incluidos los que ya no se usan—, sin que nadie se acuerde de que están.
+ *
+ * Para cambiarlo alcanza con este número: la interfaz lo muestra leyéndolo de
+ * acá, así que el aviso al usuario nunca queda desfasado del comportamiento.
+ */
+export const RETENTION_DAYS = 90;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /** Error de almacenamiento con una causa que la interfaz puede traducir. */
 export class StorageError extends Error {
   /**
@@ -288,11 +303,49 @@ function parseJson(text) {
 function readAll() {
   const parsed = parseJson(backend.store.getItem(STORAGE_KEY));
 
-  if (parsed && typeof parsed === 'object' && Array.isArray(parsed.reports)) {
-    return parsed.reports.map(normalizeRecord).filter(Boolean);
-  }
+  const reports =
+    parsed && typeof parsed === 'object' && Array.isArray(parsed.reports)
+      ? parsed.reports.map(normalizeRecord).filter(Boolean)
+      : migrateLegacy();
 
-  return migrateLegacy();
+  return dropExpired(reports);
+}
+
+/**
+ * ¿Este informe ya pasó su tiempo de conservación?
+ *
+ * @param {Record<string, string>} report
+ * @param {number} now
+ * @returns {boolean}
+ */
+function isExpired(report, now) {
+  const created = Date.parse(report.created_at);
+  // Sin una fecha usable no se borra nada: ante la duda, se conserva.
+  if (Number.isNaN(created)) return false;
+  return now - created > RETENTION_DAYS * DAY_MS;
+}
+
+/**
+ * Quita los informes vencidos y guarda el resultado.
+ *
+ * Se hace al leer, que es lo que ocurre cada vez que se abre la app: no hace
+ * falta ningún temporizador ni que la pestaña quede abierta.
+ *
+ * @param {Record<string, string>[]} reports
+ * @returns {Record<string, string>[]} Sólo los vigentes.
+ */
+function dropExpired(reports) {
+  const now = Date.now();
+  const current = reports.filter((report) => !isExpired(report, now));
+  if (current.length === reports.length) return reports;
+
+  try {
+    writeAll(current);
+  } catch {
+    // Si no se puede escribir, igual se devuelven sólo los vigentes: lo
+    // vencido no se muestra, y la limpieza se reintenta en la próxima lectura.
+  }
+  return current;
 }
 
 /**
