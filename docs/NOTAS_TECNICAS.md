@@ -395,6 +395,12 @@ volvió a `sticky`, dentro del flujo: ocupa su lugar arriba del todo —al entra
 al sitio está siempre a la vista— y se queda pegada al borde al scrollear.
 `scroll-padding-block-start` sigue evitando que tape lo que se enfoca.
 
+Queda un detalle de WebKit: mientras la barra de Chrome se esconde o reaparece,
+la posición de la cabecera `sticky` se actualiza con retraso y entre ambas
+asoma por un instante el contenido que pasa por debajo. La cabecera lleva un
+`::before` con su mismo fondo, extendido 200 px hacia arriba (fuera de la
+pantalla), que tapa esa franja.
+
 ### La cabecera tapada por la barra de Chrome
 
 Aun así, un segundo video mostró la cabecera oculta detrás de la barra de

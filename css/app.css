@@ -338,6 +338,20 @@ summary:focus-visible,
   border-block-end: 1px solid var(--line);
 }
 
+/* Mientras la barra de Chrome para iOS se esconde o reaparece, WebKit
+   actualiza con retraso la posición de lo que está pegado al borde y entre la
+   barra y la cabecera queda una franja por la que asoma el contenido que pasa
+   por debajo. El fondo de la cabecera se extiende hacia arriba, fuera de la
+   pantalla, y esa franja queda tapada con su mismo color. */
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 100%;
+  block-size: 200px;
+  background: inherit;
+}
+
 .site-header__inner {
   display: flex;
   align-items: center;
