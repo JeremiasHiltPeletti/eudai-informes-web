@@ -454,6 +454,17 @@ la app con un panel de medidas en pantalla y una copia sin scripts); con ellas
 la cabecera se veía bien, y con la dirección sin tocar también en la página
 principal. Ya se borraron.
 
+### Recargar en el tope del formulario
+
+Con la página arriba de todo, al recargar se veía un instante la cabecera
+escondida: Chrome para iOS «reponía» la posición corrida el alto de su propia
+barra y la corregía al terminar de cargar. Un video cuadro por cuadro lo mostró
+antes de que corriera `app.js` (la fecha todavía vacía), o sea en la reposición
+del navegador. `scrollRestoration` vuelve a `manual`, y la reposición queda
+toda en `restore.js`, antes del primer pintado y sólo si la página estaba
+scrolleada. `restore.js` también completa la fecha de hoy, para que el campo no
+se vea vacío hasta que corra `app.js`.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

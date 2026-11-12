@@ -7,9 +7,8 @@
    valida como siempre. Asignar `.value` no interpreta HTML: un valor guardado
    no puede inyectar nada.
    Con el formulario ya a su alto definitivo se repone también la altura a la
-   que estaba la página. El navegador la repone igual, pero al terminar de
-   cargar, y mientras tanto se veía la página arriba y después el salto. Sólo
-   se hace si estaba scrolleada: con la página en el tope no se toca nada. */
+   que estaba la página (el navegador no la repone: ver `boot.js`). Sólo se
+   hace si estaba scrolleada: con la página en el tope no se toca nada. */
 (() => {
   const root = document.documentElement;
   if (root.dataset.boot !== 'form') return;
@@ -28,6 +27,15 @@
     }
   } catch {
     // Sin almacenamiento o con un borrador ilegible: `app.js` decide.
+  }
+
+  // La fecha del informe vale hoy por defecto; `app.js` la pone igual, pero
+  // un instante después del primer pintado, y se veía el campo vacío.
+  const fecha = document.getElementById('fecha');
+  if (fecha && !fecha.value) {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    fecha.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   }
 
   try {
