@@ -384,17 +384,20 @@ summary:focus-visible,
 
 /* Primer pintado: `boot.js` avisa si hay que abrir directo en el formulario,
    así no se ve el inicio por un instante al recargar. */
-[data-boot="form"] #view-home {
+[data-boot^="form"] #view-home {
   display: none;
 }
 
-/* Al recargar en el formulario, los campos se completan con el borrador
-   cuando corre `app.js`, un instante después del primer pintado. Para no ver
-   las fechas vacías («dd/mm/aaaa») y luego llenarse, el formulario espera
-   invisible ese instante; ocupa su lugar, así que nada se mueve al aparecer.
-   Si el script fallara, la animación lo muestra igual al segundo. */
-[data-boot="form"] #view-form {
+[data-boot^="form"] #view-form {
   display: block;
+}
+
+/* Al recargar en el formulario, `restore.js` (al final de <body>) completa los
+   campos y pasa a `form-ready`. Hasta entonces el formulario no se ve, para no
+   mostrar las fechas vacías («dd/mm/aaaa») y luego llenarse; ocupa su lugar,
+   así que nada se mueve al aparecer. Si el script fallara, la animación lo
+   muestra igual al segundo. */
+[data-boot="form"] #view-form {
   visibility: hidden;
   animation: boot-reveal 0s 1s forwards;
 }

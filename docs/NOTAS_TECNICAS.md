@@ -341,6 +341,26 @@ interfiere con cómo Chrome y Safari en el celular esconden y muestran sus
 barras al hacer scroll. La franja negra que motivó esa regla ya la evita el
 color de fondo de `<html>`.
 
+## Recarga en Chrome para iPhone
+
+Un video de la recarga en Chrome para iPhone mostró que el formulario quedaba en
+blanco casi un segundo y que el aviso «Recuperamos el borrador» volvía a subir
+en cada recarga. Tres causas y sus arreglos:
+
+- `app.js` importa módulos que a su vez importan otros, y el navegador los
+  descubría en cascada, revalidando cada uno. Ahora `index.html` los precarga
+  todos juntos con `<link rel="modulepreload">`;
+- el borrador ya no espera a `app.js`: `js/restore.js`, un script clásico al
+  final de `<body>`, copia los valores guardados y repone la altura en cuanto
+  el formulario existe, antes del primer pintado. `app.js` después los sanea
+  como siempre;
+- `<html>` tiene `scroll-behavior: smooth`, así que reponer la altura con un
+  `scrollTo` común deslizaba la página desde arriba: se usa `behavior: 'instant'`.
+
+El aviso del borrador ya no aparece en una recarga (`performance` informa el
+tipo de navegación): lo cargado vuelve a estar donde estaba y no hace falta
+avisarlo.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

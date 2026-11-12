@@ -179,6 +179,12 @@ function differsFromBlank(draft) {
   });
 }
 
+/** Si esta carga de la página es una recarga. */
+function isReload() {
+  const [navigation] = globalThis.performance?.getEntriesByType?.('navigation') ?? [];
+  return navigation?.type === 'reload';
+}
+
 function prepareForm() {
   if (form.dataset.ready === 'true') return;
   form.dataset.ready = 'true';
@@ -189,7 +195,13 @@ function prepareForm() {
       if (form.elements[name] && draft[name]) form.elements[name].value = draft[name];
     }
     ageEditedByHand = Boolean(draft.edad);
-    notify('Recuperamos el borrador que habías empezado.');
+    // Al recargar, lo cargado vuelve a estar donde estaba: no hace falta
+    // avisarlo (y el aviso, al aparecer, se sentía como algo moviéndose).
+    if (!isReload()) notify('Recuperamos el borrador que habías empezado.');
+  } else {
+    // `restore.js` pudo haber copiado un borrador sin nada propio (sólo la
+    // fecha de otro día, por ejemplo): se vuelve a un formulario en blanco.
+    form.reset();
   }
 
   if (!form.elements.fecha.value) form.elements.fecha.value = todayISO();
