@@ -465,6 +465,13 @@ toda en `restore.js`, antes del primer pintado y sólo si la página estaba
 scrolleada. `restore.js` también completa la fecha de hoy, para que el campo no
 se vea vacío hasta que corra `app.js`.
 
+Con eso el salto siguió. Un panel de medidas en pantalla (temporal) mostró que
+en el cuadro con la cabecera escondida la página informa scroll 0 y cabecera en
+0, igual que en el cuadro correcto: la página no se mueve; es Chrome para iOS,
+que durante la recarga de una página con scroll dibuja un instante el contenido
+debajo de su barra y después lo acomoda. No depende de nada de la página, y en
+Safari no ocurre. Queda como limitación conocida de Chrome en iPhone.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

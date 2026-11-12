@@ -41,10 +41,7 @@
   try {
     const y = Number(globalThis.sessionStorage.getItem('eudai.scroll'));
     globalThis.sessionStorage.removeItem('eudai.scroll');
-    // TEMPORAL (diagnóstico)
-    root.dataset.restoreDebug = `leído=${y} scrollY antes=${Math.round(globalThis.scrollY)} inH=${globalThis.innerHeight}`;
     if (y > 0) globalThis.scrollTo({ top: y, behavior: 'instant' });
-    root.dataset.restoreDebug += ` después=${Math.round(globalThis.scrollY)}`;
   } catch {
     // La repone el navegador al terminar de cargar.
   }

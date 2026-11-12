@@ -190,12 +190,6 @@ function saveScrollForReload() {
   try {
     const y = currentView() === 'form' ? Math.round(globalThis.scrollY) : 0;
     globalThis.sessionStorage.setItem('eudai.scroll', String(y));
-    // TEMPORAL (diagnóstico): qué se vio al salir.
-    const vv = globalThis.visualViewport;
-    globalThis.sessionStorage.setItem(
-      'eudai.scroll.debug',
-      `y=${y} inH=${globalThis.innerHeight} vv=${vv ? Math.round(vv.height) + '@' + Math.round(vv.offsetTop) + '/' + Math.round(vv.pageTop) : '-'} vis=${document.visibilityState}`,
-    );
   } catch {
     // Sin almacenamiento de sesión, la repone el navegador al terminar.
   }
