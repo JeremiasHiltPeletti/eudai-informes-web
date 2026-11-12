@@ -180,6 +180,21 @@ function differsFromBlank(draft) {
   });
 }
 
+/**
+ * Guarda a qué altura estaba el formulario, para que `restore.js` la reponga
+ * antes del primer pintado en una recarga. El navegador también la repone,
+ * pero recién al terminar de cargar: en el celular se veía la página arriba
+ * y después el salto hasta donde estaba.
+ */
+function saveScrollForReload() {
+  try {
+    const y = currentView() === 'form' ? Math.round(globalThis.scrollY) : 0;
+    globalThis.sessionStorage.setItem('eudai.scroll', String(y));
+  } catch {
+    // Sin almacenamiento de sesión, la repone el navegador al terminar.
+  }
+}
+
 /** Marca, por pestaña, de que el borrador ya se mostró en ella. */
 const SEEN_KEY = 'eudai.borrador.visto';
 
@@ -517,7 +532,10 @@ form.addEventListener('change', (event) => {
 
 // Lo último que se escribió no espera al autoguardado si la página se recarga,
 // se cierra o pasa a segundo plano (en el celular, cambiar de app).
-globalThis.addEventListener('pagehide', () => saveDraftSoon.flush());
+globalThis.addEventListener('pagehide', () => {
+  saveDraftSoon.flush();
+  saveScrollForReload();
+});
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveDraftSoon.flush();
 });

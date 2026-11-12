@@ -405,11 +405,13 @@ página mueve el scroll por código mientras carga, ese margen queda mal y el
 contenido arranca debajo de la barra. La app lo hacía dos veces: en el primer
 `renderRoute` (`scrollTo(0)`) y en `restore.js` (reponer la altura guardada).
 
-Ahora, en la carga inicial, nadie toca el scroll: `scrollRestoration` vuelve a
-`auto` y el navegador repone él solo la altura en una recarga. Como
-`restore.js` completa el formulario antes del primer pintado, el documento ya
-tiene su alto definitivo y esa reposición no salta. `scrollTo(0)` queda sólo
-para navegar entre vistas. El aviso de borrador recuperado se suprime con una
+Ahora, en la carga inicial, `scrollTo(0)` queda sólo para navegar entre vistas
+y `scrollRestoration` vuelve a `auto`. (La causa real resultó ser otra, el
+cambio de dirección durante la carga —ver más abajo—, así que la reposición
+de la altura en una recarga volvió a `restore.js`: el navegador la repone
+igual, pero al terminar de cargar, y en el celular se veía la página arriba y
+después el salto. `restore.js` la repone antes del primer pintado, sólo si la
+página estaba scrolleada; en el tope no toca nada.) El aviso de borrador recuperado se suprime con una
 marca en `sessionStorage` (ya se mostró en esta pestaña) y no con el tipo de
 navegación: el «Volver a cargar» del menú de Chrome en iOS no siempre se
 informa como `reload`.
@@ -446,6 +448,11 @@ dirección sino en el estado del historial de la pestaña (`history.state.view`)
 
 `boot.js` lee el mismo estado para mostrar el formulario desde el primer
 pintado en una recarga.
+
+Para aislar la causa se publicaron un rato dos páginas de prueba (una copia de
+la app con un panel de medidas en pantalla y una copia sin scripts); con ellas
+la cabecera se veía bien, y con la dirección sin tocar también en la página
+principal. Ya se borraron.
 
 ## Vista previa de impresión lenta en Chrome para Windows
 

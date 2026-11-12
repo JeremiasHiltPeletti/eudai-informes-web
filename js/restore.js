@@ -4,12 +4,12 @@
    rato después. En el celular esa espera se veía como la página en blanco y
    los campos llenándose después.
    Acá sólo se copian los valores guardados; `app.js` después los sanea y
-   valida como siempre. Como el formulario ya tiene su alto definitivo antes
-   del primer pintado, el navegador repone por su cuenta la altura en la que
-   estaba la página al recargar, sin ningún salto. (Moverla por código acá
-   dejaba, en Chrome para iOS, la cabecera tapada por la barra del navegador.)
-   Asignar `.value` no interpreta HTML: un valor guardado no puede inyectar
-   nada. */
+   valida como siempre. Asignar `.value` no interpreta HTML: un valor guardado
+   no puede inyectar nada.
+   Con el formulario ya a su alto definitivo se repone también la altura a la
+   que estaba la página. El navegador la repone igual, pero al terminar de
+   cargar, y mientras tanto se veía la página arriba y después el salto. Sólo
+   se hace si estaba scrolleada: con la página en el tope no se toca nada. */
 (() => {
   const root = document.documentElement;
   if (root.dataset.boot !== 'form') return;
@@ -28,6 +28,14 @@
     }
   } catch {
     // Sin almacenamiento o con un borrador ilegible: `app.js` decide.
+  }
+
+  try {
+    const y = Number(globalThis.sessionStorage.getItem('eudai.scroll'));
+    globalThis.sessionStorage.removeItem('eudai.scroll');
+    if (y > 0) globalThis.scrollTo({ top: y, behavior: 'instant' });
+  } catch {
+    // La repone el navegador al terminar de cargar.
   }
 
   root.dataset.boot = 'form-ready';
