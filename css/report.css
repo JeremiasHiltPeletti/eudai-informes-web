@@ -137,6 +137,7 @@ body {
   overflow: hidden;
   background: var(--cream);
   break-after: page;
+  break-inside: avoid;
 }
 
 .page:last-of-type {

@@ -944,4 +944,24 @@ select.control {
     font-family: var(--font-sans);
     font-size: 12pt;
   }
+
+  /* WebKit en iOS (Safari, y Chrome que usa el mismo motor) ignora
+     `@page { margin: 0 }`: imprime con sus propios márgenes (unos 6 mm a los
+     lados y 14 mm arriba y abajo) y achica el contenido hasta que entre a lo
+     ancho. Una hoja de 210 mm queda entonces al 94 % y mide 279 mm de alto
+     contra 269 disponibles: el sobrante cae en una página extra, y el informe
+     sale con el doble de hojas.
+     La salida es ensanchar el contenido: al ser más ancho, iOS lo achica más y
+     la hoja entra también a lo alto, centrada y con margen blanco.
+     `-webkit-touch-callout` sólo existe en iOS, así que el resto de los
+     navegadores sigue imprimiendo a página completa. */
+  @supports (-webkit-touch-callout: none) {
+    .print-root {
+      inline-size: 230mm;
+    }
+
+    .print-root .page {
+      margin-inline: auto;
+    }
+  }
 }

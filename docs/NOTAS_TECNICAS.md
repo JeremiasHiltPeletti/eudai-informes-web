@@ -267,6 +267,22 @@ La clase `.card` del documento pasó a `.rcard`: era el único nombre que
 coincidía con uno de la interfaz, y al convivir las dos hojas la tarjeta del
 informe heredaba la sombra de la tarjeta del formulario.
 
+### Hojas de más en iOS
+
+Con el informe ya visible apareció un segundo problema: salía con el doble de
+páginas, una casi vacía después de cada hoja. WebKit en iOS ignora
+`@page { margin: 0 }`, imprime con sus propios márgenes (unos 6 mm a los lados y
+14 mm arriba y abajo) y achica el contenido sólo hasta que entre a lo ancho. La
+hoja de 210 × 297 mm quedaba al 94 %, con 279 mm de alto contra 269 disponibles,
+y los 10 mm sobrantes caían en una página nueva.
+
+El arreglo vive en el bloque de impresión de `css/app.css`, dentro de
+`@supports (-webkit-touch-callout: none)` —una propiedad que sólo existe en
+iOS—: el contenedor pasa a medir 230 mm de ancho con la hoja centrada, de modo
+que iOS la achica un poco más y entra también a lo alto. En iPhone y iPad el
+informe sale entonces con un margen blanco alrededor (iOS no permite imprimir a
+sangre desde la web); en el resto de los navegadores sigue a página completa.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en
