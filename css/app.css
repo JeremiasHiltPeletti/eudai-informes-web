@@ -991,7 +991,16 @@ select.control {
      navegadores sigue imprimiendo a página completa. */
   @supports (-webkit-touch-callout: none) {
     .print-root {
-      inline-size: 230mm;
+      inline-size: 222mm;
+    }
+
+    /* Alrededor de la hoja, papel blanco: sin esto el color de fondo de la
+       app se imprimía como una franja gris entre el informe y el margen. */
+    :root,
+    :root body {
+      /* `:root body` para ganarle al fondo crema que `report.css` le pone a
+         <body>, y que se carga después. */
+      background: #fff;
     }
 
     .print-root .page {

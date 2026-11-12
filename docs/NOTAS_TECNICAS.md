@@ -278,7 +278,7 @@ y los 10 mm sobrantes caían en una página nueva.
 
 El arreglo vive en el bloque de impresión de `css/app.css`, dentro de
 `@supports (-webkit-touch-callout: none)` —una propiedad que sólo existe en
-iOS—: el contenedor pasa a medir 230 mm de ancho con la hoja centrada, de modo
+iOS—: el contenedor pasa a medir 222 mm de ancho con la hoja centrada, de modo
 que iOS la achica un poco más y entra también a lo alto. En iPhone y iPad el
 informe sale entonces con un margen blanco alrededor (iOS no permite imprimir a
 sangre desde la web); en el resto de los navegadores sigue a página completa.
