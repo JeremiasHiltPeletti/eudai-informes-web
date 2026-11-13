@@ -502,6 +502,13 @@ cada lado: pasan «Delia Eulalia Fontana», «Fontana, Delia Eulalia» y
 signos. Al salir del campo, `titleCase` deja la coma pegada al apellido y con un
 espacio después («fontana ,delia» → «Fontana, Delia»).
 
+## El título «PROFESIONAL» llegaba al borde de su ficha
+
+En la hoja de datos, el título de la ficha del profesional medía 43 mm con
+5,4 mm de cuerpo y quedaba a menos de 1 mm del borde derecho de una ficha de
+65,8 mm (se salía del relleno). Pasó a 4,6 mm de cuerpo, con el ícono de 11 mm
+y 3 mm de separación: ahora mide 36,6 mm y le quedan 9 mm hasta el borde.
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

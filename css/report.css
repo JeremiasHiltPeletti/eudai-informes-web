@@ -571,16 +571,19 @@ body {
   margin-block-start: 8.4mm;
 }
 
+/* Cabecera de la ficha del profesional. La ficha mide 65,8 mm y, descontados
+   el relleno y el ícono, al título le quedan unos 39 mm: «PROFESIONAL» tiene
+   que entrar ahí con aire, no llegar al borde. */
 .rcard__heading {
   display: flex;
-  gap: 3.5mm;
+  gap: 3mm;
   align-items: flex-start;
 }
 
 .rcard__heading-icon {
   flex: none;
-  inline-size: 12mm;
-  block-size: 12mm;
+  inline-size: 11mm;
+  block-size: 11mm;
 }
 
 .rcard__heading-icon svg {
@@ -589,12 +592,12 @@ body {
 }
 
 .rcard__heading-title {
-  padding-block-start: 1.9mm;
-  font-size: 5.4mm;
+  padding-block-start: 1.6mm;
+  font-size: 4.6mm;
   font-weight: 700;
   line-height: 1;
   color: var(--title-ink);
-  letter-spacing: 0.2mm;
+  letter-spacing: 0.15mm;
 }
 
 .rcard__heading-title::after {
