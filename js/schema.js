@@ -34,7 +34,11 @@ export const MIN_DATE = '1900-01-01';
    Se usan `\p{L}` y `\p{M}` (con el flag `u`) para no romper acentos, la ñ ni
    los apellidos con diacríticos, que un `[A-Za-z]` descartaría. */
 
-const NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M}\s'’.\-]*$/u;
+/* Un nombre admite, además, una sola coma para el orden «Apellido, Nombre»
+   («Fontana, Delia Eulalia»): a cada lado tiene que haber letras, así que no
+   pasan «, Delia», «Fontana,» ni dos comas. */
+const NAME_PART = String.raw`[\p{L}\p{M}][\p{L}\p{M}\s'’.\-]*`;
+const NAME_RE = new RegExp(`^${NAME_PART}(?:,\\s*${NAME_PART})?$`, 'u');
 const DNI_RE = /^\d{1,3}(?:\.?\d{3}){1,3}$/u;
 const PHONE_RE = /^[\d\s+()\-.]{6,}$/u;
 const MEMBER_RE = /^[\p{L}\p{N}\s/\-.]+$/u;
@@ -71,7 +75,8 @@ export const FIELDS = Object.freeze({
     minLength: 2,
     maxLength: 80,
     pattern: NAME_RE,
-    patternMessage: 'Usá sólo letras, espacios, apóstrofos y guiones.',
+    patternMessage:
+      'Usá letras, espacios, apóstrofos y guiones; una coma sólo para «Apellido, Nombre».',
   },
   dni: {
     label: 'DNI',
@@ -151,7 +156,8 @@ export const FIELDS = Object.freeze({
     minLength: 2,
     maxLength: 80,
     pattern: NAME_RE,
-    patternMessage: 'Usá sólo letras, espacios, apóstrofos y guiones.',
+    patternMessage:
+      'Usá letras, espacios, apóstrofos y guiones; una coma sólo para «Apellido, Nombre».',
   },
   matricula: {
     label: 'Matrícula profesional',

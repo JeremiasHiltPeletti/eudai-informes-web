@@ -492,6 +492,16 @@ que durante la recarga de una página con scroll dibuja un instante el contenido
 debajo de su barra y después lo acomoda. No depende de nada de la página, y en
 Safari no ocurre. Queda como limitación conocida de Chrome en iPhone.
 
+## Nombres con coma
+
+El patrón de los nombres (`NAME_RE`, en `js/schema.js`) rechazaba la coma, y
+en la práctica el orden «Apellido, Nombre» («Fontana, Delia Eulalia») es el que
+mejor distingue apellido de nombre. Ahora se admite una sola coma, con letras a
+cada lado: pasan «Delia Eulalia Fontana», «Fontana, Delia Eulalia» y
+«de la Cruz, María José»; no pasan «, Delia», «Fontana,», dos comas ni otros
+signos. Al salir del campo, `titleCase` deja la coma pegada al apellido y con un
+espacio después («fontana ,delia» → «Fontana, Delia»).
+
 ## Vista previa de impresión lenta en Chrome para Windows
 
 El diálogo de impresión de Chrome se arrastraba en Windows, mientras que en

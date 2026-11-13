@@ -88,7 +88,12 @@ export function calcAge(birthISO, refISO = todayISO()) {
  * @returns {string}
  */
 export function titleCase(value) {
-  const words = String(value ?? '').toLocaleLowerCase('es-AR').split(/\s+/u);
+  const words = String(value ?? '')
+    .toLocaleLowerCase('es-AR')
+    // «Fontana ,delia» → «Fontana, delia»: la coma pegada al apellido y con
+    // un espacio después.
+    .replace(/\s*,\s*/gu, ', ')
+    .split(/\s+/u);
 
   return words
     .map((word, index) => {
