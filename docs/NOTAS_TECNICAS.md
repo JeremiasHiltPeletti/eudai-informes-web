@@ -569,6 +569,23 @@ de datos y contenido, de unos 170 ms a unos 40 ms cada una). El PDF pasó de
 542 KB a 289 KB, y comparado píxel a píxel con el anterior la diferencia es
 imperceptible (menos del 0,5 % de los píxeles, por el remuestreo).
 
+### La hoja 2 seguía trabándose: franjas vectoriales
+
+En una PC con Windows la hoja 2 seguía trabándose, pero sólo al pasar por la
+zona de los títulos «Datos del paciente» y «Profesional». Para aislarlo se
+mandaron cinco PDF de esa hoja, cada uno sin un elemento (fondos, íconos,
+fichas, texto): el único fluido fue el que no tenía fondos. Es decir, esa PC
+reprocesa la imagen de la onda de arriba cada vez que se dibuja esa zona.
+
+Las franjas de las hojas de datos y de contenido pasaron a ser **SVG**: son
+colores lisos, así que se trazaron con potrace capa por capa (onda, banda
+clara, línea, logotipo) a partir de los fondos completos del historial. Chrome
+las imprime como trazos vectoriales: la hoja 2 queda sin ninguna imagen, se
+dibuja en unos 17 ms en lugar de 48 y se ve nítida a cualquier zoom; comparada
+con la anterior, difiere en menos del 0,5 % de los píxeles. El script está en
+`docs/vectorizar-fondos.py`. La portada sigue siendo una imagen: su marca de
+agua es casi del color del papel y no se traza bien por capas.
+
 ## Qué se guarda, y qué no
 
 La app **no guarda informes**. El archivo es el PDF que se descarga y se envía.

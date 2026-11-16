@@ -231,8 +231,12 @@ body {
    - en las hojas de datos y de contenido sólo son imagen las franjas con
      dibujo (la onda de arriba, la de abajo y la hoja de la ficha); el resto
      es el color liso de la hoja, que se dibuja como un rectángulo.
-   Se generaron a partir de los fondos completos, que quedan en el historial
-   de Git. */
+   Esas franjas, además, son dibujos vectoriales (SVG), no fotos: en una PC
+   con Windows el visor seguía trabándose al pasar por la onda de arriba de la
+   hoja 2, y un trazo vectorial se dibuja sin procesar píxeles. Se generaron
+   con potrace a partir de los fondos completos (colores lisos), que quedan en
+   el historial de Git. La portada, con una marca de agua casi del color del
+   papel, sigue siendo una imagen. */
 .page__bg {
   position: absolute;
   inset: 0;
