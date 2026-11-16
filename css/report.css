@@ -221,19 +221,56 @@ body {
   background: var(--page-2);
 }
 
-/* Fondo de la hoja: toda la decoración fija (ondas, marcas de agua, logotipo)
-   va aplanada en una sola imagen opaca por tipo de hoja.
-   Antes eran hasta seis PNG con transparencia superpuestos en cada página, y
-   el visor de PDF de Chrome —que en Windows dibuja por CPU— tenía que
-   mezclarlos uno por uno cada vez que se desplazaba la vista previa de
-   impresión. Una imagen opaca no necesita mezcla. Los fondos se generan a
-   partir del render del diseño original, a 2,5× para la impresora. */
+/* Fondo de la hoja: la decoración fija (ondas, marcas de agua, logotipo) va
+   aplanada en imágenes opacas: una sin transparencia no obliga al visor de
+   PDF a mezclar capas.
+   Lo que más pesa en el visor de Chrome (la ventana de «Descargar PDF») es
+   la cantidad de píxeles de imagen por hoja: cada uno pasa por la gestión de
+   color al dibujar, cada vez que se pasa de página. Por eso:
+   - van a 180 ppp, no a 240: en papel y en pantalla no se nota;
+   - en las hojas de datos y de contenido sólo son imagen las franjas con
+     dibujo (la onda de arriba, la de abajo y la hoja de la ficha); el resto
+     es el color liso de la hoja, que se dibuja como un rectángulo.
+   Se generaron a partir de los fondos completos, que quedan en el historial
+   de Git. */
 .page__bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   inline-size: 100%;
   block-size: 100%;
+}
+
+.page__strip {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 0;
+  inline-size: 100%;
+}
+
+.page__strip--data-top {
+  inset-block-start: 0.00mm;
+  block-size: 105.69mm;
+}
+
+.page__strip--data-leaf {
+  inset-block-start: 223.12mm;
+  block-size: 28.01mm;
+}
+
+.page__strip--data-bottom {
+  inset-block-start: 277.76mm;
+  block-size: 19.24mm;
+}
+
+.page__strip--content-top {
+  inset-block-start: 0.00mm;
+  block-size: 105.56mm;
+}
+
+.page__strip--content-bottom {
+  inset-block-start: 277.64mm;
+  block-size: 19.36mm;
 }
 
 /* --------------------------------------------------------------------------

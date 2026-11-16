@@ -546,6 +546,29 @@ desde las variables. El PDF incrusta TrueType (`CIDFontType2`) y pesa menos.
 La interfaz sigue usando Inter variable; las variables de Montserrat se
 borraron porque ya nadie las usa.
 
+### Y la causa que quedaba: píxeles de imagen por hoja
+
+Con las fuentes resueltas, el visor que abre «Descargar PDF» seguía lento en
+Windows al pasar de página. Midiendo con PDFium (el motor de ese visor), casi
+todo el tiempo de cada hoja se iba en el fondo: sin fondos, una hoja se dibuja
+unas diez veces más rápido. Chrome etiqueta las imágenes con un perfil de color
+ICC, así que cada píxel pasa por la gestión de color en cada redibujo; el costo
+es proporcional a la cantidad de píxeles.
+
+- Los fondos bajaron de 240 a 180 ppp.
+- En las hojas de datos y de contenido sólo es imagen lo que tiene dibujo: la
+  onda de arriba, la de abajo y, en la de datos, la hoja de la ficha
+  (`bg-data-top`, `-leaf`, `-bottom`; `bg-content-top`, `-bottom`). El resto
+  es el color liso de la hoja. Los cortes caen en filas de color liso, así que
+  no se ven uniones.
+- La portada tiene dibujo en casi toda la superficie y sigue siendo una sola
+  imagen, a 180 ppp.
+
+Resultado, con PDFium: de 727 ms a 215 ms para dibujar las cuatro hojas (las
+de datos y contenido, de unos 170 ms a unos 40 ms cada una). El PDF pasó de
+542 KB a 289 KB, y comparado píxel a píxel con el anterior la diferencia es
+imperceptible (menos del 0,5 % de los píxeles, por el remuestreo).
+
 ## Qué se guarda, y qué no
 
 La app **no guarda informes**. El archivo es el PDF que se descarga y se envía.
