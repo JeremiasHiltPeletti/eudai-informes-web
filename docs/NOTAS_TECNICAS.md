@@ -586,6 +586,18 @@ con la anterior, difiere en menos del 0,5 % de los píxeles. El script está en
 `docs/vectorizar-fondos.py`. La portada sigue siendo una imagen: su marca de
 agua es casi del color del papel y no se traza bien por capas.
 
+Mejoró, pero en esa PC la zona de los títulos seguía trabándose. El primer
+trazado era torpe: las capas se apilaban por superficie y no por posición, así
+que la banda clara (que cubre toda la franja, títulos incluidos) arrastraba
+también la forma del logo y fragmentos de la línea, unas 12.000 coordenadas en
+un solo trazo que el visor recorre entero cada vez que dibuja esa zona. Ahora
+las capas se apilan de la más clara (atrás) a la más oscura (adelante), cada
+figura va en su propio trazo con su caja ajustada, y el borde de cada máscara
+se suaviza antes de trazar, para que el escalonado del JPEG no se vuelva
+cientos de curvitas. La hoja 2 pasó de 11.563 curvas a 3.837, el PDF de 601 KB
+a 315 KB, y la fidelidad es igual o mejor (diferencia con el original por
+debajo del 0,25 % de los píxeles).
+
 ## Qué se guarda, y qué no
 
 La app **no guarda informes**. El archivo es el PDF que se descarga y se envía.

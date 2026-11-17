@@ -44,8 +44,11 @@ for s0 in range(0, len(flatall), 400000):
     idx[s0:s0 + 400000] = np.argmin(((ch[:, None, :] - pal[None]) ** 2).sum(-1), axis=1)
 idx = idx.reshape(a.shape[:2])
 counts = np.bincount(idx.ravel(), minlength=k)
-order = [0] + [i for i in np.argsort(-counts) if i != 0 and counts[i] > 0]
-bg = 0; layers = order[1:]
+# Orden de apilado: de más claro (fondo) a más oscuro (adelante). En estas
+# decoraciones lo oscuro va encima: la banda clara, la onda, la línea, el logo.
+lum = pal @ np.array([0.299, 0.587, 0.114])
+bg = 0
+layers = [i for i in np.argsort(-lum) if i != 0 and counts[i] > 0]
 w, h = big.size
 paths = []
 with tempfile.TemporaryDirectory() as d:
@@ -53,13 +56,18 @@ with tempfile.TemporaryDirectory() as d:
         mask = np.isin(idx, layers[n:])  # apilado: cada capa cubre por debajo a las siguientes
         if mask.mean() < 0.0002: continue
         bmp = os.path.join(d, 'm.pbm'); svg = os.path.join(d, 'm.svg')
-        Image.fromarray(((~mask) * 255).astype('uint8')).convert('1').save(bmp)
-        subprocess.run(['potrace', bmp, '-s', '-o', svg, '--flat', '-t', '30', '-a', '1.0', '-O', '0.4', '-u', '10'], check=True)
+        # Se suaviza el borde de la máscara antes de trazar: el escalonado del
+        # JPEG se volvía cientos de curvitas, y un borde liso se describe con
+        # pocas curvas largas (menos trabajo para el visor de PDF).
+        from PIL import ImageFilter as _F
+        m = Image.fromarray((mask * 255).astype('uint8')).filter(_F.GaussianBlur(1.6))
+        Image.fromarray(((np.asarray(m) < 128) * 255).astype('uint8')).convert('1').save(bmp)
+        subprocess.run(['potrace', bmp, '-s', '-o', svg, '-t', '40', '-a', '1.0', '-O', '1.5', '-u', '10'], check=True)
         s = open(svg).read()
         tr = re.search(r'<g transform="([^"]+)"', s).group(1)
-        ds = ' '.join(re.findall(r' d="([^"]+)"', s))
+        ds = re.findall(r' d="([^"]+)"', s)
         color = '#%02x%02x%02x' % tuple(int(c) for c in pal[li])
-        paths.append(f'<path transform="{tr}" fill="{color}" d="{ds}"/>')
+        paths.append(f'<g transform="{tr}" fill="{color}">' + ''.join(f'<path d="{d}"/>' for d in ds) + '</g>')
 svgtxt = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" preserveAspectRatio="none">'
           + ''.join(paths) + '</svg>\n')
 open(out, 'w').write(svgtxt)
