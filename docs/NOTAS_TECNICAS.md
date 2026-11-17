@@ -583,7 +583,7 @@ clara, línea, logotipo) a partir de los fondos completos del historial. Chrome
 las imprime como trazos vectoriales: la hoja 2 queda sin ninguna imagen, se
 dibuja en unos 17 ms en lugar de 48 y se ve nítida a cualquier zoom; comparada
 con la anterior, difiere en menos del 0,5 % de los píxeles. El script está en
-`docs/vectorizar-fondos.py`. La portada sigue siendo una imagen: su marca de
+`docs/herramientas/vectorizar-fondos.py`. La portada sigue siendo una imagen: su marca de
 agua es casi del color del papel y no se traza bien por capas.
 
 Mejoró, pero en esa PC la zona de los títulos seguía trabándose. El primer
@@ -597,6 +597,25 @@ se suaviza antes de trazar, para que el escalonado del JPEG no se vuelva
 cientos de curvitas. La hoja 2 pasó de 11.563 curvas a 3.837, el PDF de 601 KB
 a 315 KB, y la fidelidad es igual o mejor (diferencia con el original por
 debajo del 0,25 % de los píxeles).
+
+
+### La onda de arriba, más corta
+
+Aun con un tercio de las curvas, en esa PC la zona de los títulos seguía
+trabándose. Una segunda tanda de variantes de la hoja 2 lo resolvió: la única
+fluida fue la que cortaba la onda antes de llegar a los títulos. Es decir, en
+esa PC cualquier dibujo detrás de «Datos del paciente» y «Profesional» —foto o
+vector— vuelve lento el visor.
+
+La onda de arriba (hojas de datos y de contenido) pasó de 105,7 mm a 58,1 mm
+de alto: se acható en vertical, así baja hasta el borde izquierdo antes de los
+títulos, con la misma forma. El logo no se achata: va encima, con su tamaño y
+su posición de siempre. Para eso la onda se volvió a trazar sin el logo
+(`docs/herramientas/onda-fondo.py`: sus píxeles y los de la línea se
+reemplazan por el color de afuera más cercano) y la línea naranja aparte
+(`docs/herramientas/onda-linea.py`: se descuenta el logo y se unen los dos
+tramos que quedan donde lo rozaba). El SVG final dibuja la onda y la línea
+dentro de un `scale(1, 0.55)` y el logo afuera.
 
 ## Qué se guarda, y qué no
 

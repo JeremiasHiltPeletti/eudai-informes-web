@@ -252,9 +252,11 @@ body {
   inline-size: 100%;
 }
 
+/* La onda de arriba está achatada para que termine antes de los títulos
+   (ver «La onda de arriba, más corta» en docs/NOTAS_TECNICAS.md). */
 .page__strip--data-top {
   inset-block-start: 0.00mm;
-  block-size: 105.69mm;
+  block-size: 58.13mm;
 }
 
 .page__strip--data-leaf {
@@ -269,7 +271,7 @@ body {
 
 .page__strip--content-top {
   inset-block-start: 0.00mm;
-  block-size: 105.56mm;
+  block-size: 58.06mm;
 }
 
 .page__strip--content-bottom {
